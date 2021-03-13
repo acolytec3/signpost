@@ -34,7 +34,6 @@ function App() {
   }, []);
 
   const onboard = Onboard({
-    dappId: "9df8e2ce-b55b-4d4c-a213-35c5294cba7f",
     networkId: 42,
     subscriptions: {
       wallet: (wallet) => {

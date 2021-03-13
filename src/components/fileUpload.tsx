@@ -17,7 +17,7 @@ import {
 import GlobalContext from "../contextx/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
 import { ethers } from "ethers";
-import { Stage, Image, Layer, Line } from "react-konva";
+import { Stage, Image, Layer, Line, Transformer } from "react-konva";
 
 const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
 
@@ -31,8 +31,8 @@ const FileUploader = () => {
   const isDrawing = React.useRef(false);
   const stageRef = React.useRef(null);
   const [stageSize, setSize] = React.useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: window.innerWidth * .9,
+    height: window.innerHeight * .9,
   });
   const [imageSize, setImageSize] = React.useState({
     width: window.innerWidth,
@@ -41,15 +41,20 @@ const FileUploader = () => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+
   React.useEffect(() => {
     if (photo) {
+      let aspectRatio = photo.width / photo.height;
+      let stageRatio = stageSize.width / stageSize.height;
       let newSize = stageSize;
-      if (photo.width > stageSize) {
-        let scale = photo.width / newSize.width;
-        newSize.width = photo.width;
-        newSize.height = newSize.height * scale;
+      if (aspectRatio >= stageRatio) {
+        newSize.height = photo.height / aspectRatio;
       }
-      setImageSize({width: photo.width, height: photo.height})
+      else {
+        newSize.width = photo.width * stageRatio;
+        newSize.height = photo.height;
+      }
+      setImageSize(newSize)
       setSize(newSize);
     }
   }, [photo, stageSize]);
@@ -58,7 +63,7 @@ const FileUploader = () => {
     if (photo && photo.width > 0) {
       onOpen();
     }
-  })
+  },[photo])
 
   const handleMouseDown = (e: any) => {
     isDrawing.current = true;
@@ -100,7 +105,7 @@ const FileUploader = () => {
   };
 
   const handleUpload = async (evt: ChangeEvent<HTMLInputElement>) => {
-    console.log('got files', evt.target.files)
+
     let files = evt.target.files;
     let reader = new FileReader();
     if (files && files.length > 0) {
@@ -137,6 +142,7 @@ const FileUploader = () => {
     //@ts-ignore
     let img = stageRef.current!.toDataURL();
     setAutographedImage(img);
+    setPhoto(undefined);
     onClose();
   };
 
@@ -199,7 +205,7 @@ const FileUploader = () => {
     }
     setPhoto(undefined);
   };
-  console.log(stageSize);
+
   return (
     <Box>
       <Stack align="center">
@@ -207,7 +213,7 @@ const FileUploader = () => {
           <Button w="200px" onClick={handleClick}>
             Select Image
           </Button>
-          <Button w="200px" isDisabled={!photo} onClick={uploadPhoto}>
+          <Button w="200px" isDisabled={!autographedImage} onClick={uploadPhoto}>
             Mint NFT
           </Button>
         </VStack>
@@ -242,7 +248,7 @@ const FileUploader = () => {
                 onTouchEnd={handleMouseUp}
               >
                 <Layer>
-                  <Image image={photo} width={imageSize.width} height={imageSize.height}/>
+                  <Image image={photo} width={imageSize.width} height={imageSize.height} />
                 </Layer>
                 <Layer>
                   {lines.map((line: any, i: any) => (
