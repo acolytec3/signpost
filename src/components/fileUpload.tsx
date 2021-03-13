@@ -17,7 +17,7 @@ import {
 import GlobalContext from "../contextx/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
 import { ethers } from "ethers";
-import { Stage, Image, Layer, Line, Transformer } from "react-konva";
+import { Stage, Image, Layer, Line } from "react-konva";
 
 const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
 
@@ -63,7 +63,7 @@ const FileUploader = () => {
     if (photo && photo.width > 0) {
       onOpen();
     }
-  },[photo])
+  },[photo ])
 
   const handleMouseDown = (e: any) => {
     isDrawing.current = true;
@@ -199,7 +199,7 @@ const FileUploader = () => {
         position: "top",
         status: "error",
         title: "Something went wrong",
-        description: "Please try again",
+        description: error,
         duration: 5000,
       });
     }
