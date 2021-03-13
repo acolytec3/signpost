@@ -199,7 +199,7 @@ const FileUploader = () => {
         position: "top",
         status: "error",
         title: "Something went wrong",
-        description: error,
+        description: error.toString(),
         duration: 5000,
       });
     }
