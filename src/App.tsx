@@ -37,18 +37,27 @@ function App() {
     networkId: 42,
     subscriptions: {
       wallet: (wallet) => {
+        //@ts-ignore
+        window.ethereum.enable()
         web3 = new ethers.providers.Web3Provider(wallet.provider);
         dispatch({ type: "SET_WEB3", payload: { web3: web3 } });
       },
+
     },
   });
 
+  const handleConnect = async () => {
+
+    const walletSelected = await onboard.walletSelect()
+//    const read = await onboard.walletCheck()
+//    console.log(read);
+  }
   return (
     <ChakraProvider>
       <GlobalContext.Provider value={{ dispatch, state }}>
         <Center h="90vh">
           <VStack>
-            <Button onClick={() => onboard.walletSelect()}>Connect Web3</Button>
+            <Button onClick={handleConnect}>Connect Web3</Button>
             <FileUploader />
           </VStack>
         </Center>
