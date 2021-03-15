@@ -5,14 +5,10 @@ import {
   Box,
   useToast,
   VStack,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   useDisclosure,
+  Collapse,
+  HStack,
+  Heading,
 } from "@chakra-ui/react";
 import GlobalContext from "../contextx/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
@@ -30,40 +26,35 @@ const FileUploader = () => {
   const [lines, setLines] = React.useState<any>([]);
   const isDrawing = React.useRef(false);
   const stageRef = React.useRef(null);
-  const [stageSize, setSize] = React.useState({
-    width: window.innerWidth * .9,
-    height: window.innerHeight * .9,
-  });
   const [imageSize, setImageSize] = React.useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 300,
+    height: 300
   });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-
   React.useEffect(() => {
     if (photo) {
       let aspectRatio = photo.width / photo.height;
-      let stageRatio = stageSize.width / stageSize.height;
-      let newSize = stageSize;
-      if (aspectRatio >= stageRatio) {
-        newSize.height = photo.height / aspectRatio;
+      let newSize = imageSize;
+
+      if (aspectRatio >= 1) {
+        newSize.width = 299;
+        newSize.height = 299 / aspectRatio;
+      } else {
+        newSize.width = 299 * aspectRatio;
+        newSize.height = 299;
       }
-      else {
-        newSize.width = photo.width * stageRatio;
-        newSize.height = photo.height;
-      }
-      setImageSize(newSize)
-      setSize(newSize);
+
+      setImageSize(newSize);
     }
-  }, [photo, stageSize]);
+  }, [photo, imageSize]);
 
   React.useEffect(() => {
     if (photo && photo.width > 0) {
       onOpen();
     }
-  },[photo ])
+  }, [photo]);
 
   const handleMouseDown = (e: any) => {
     isDrawing.current = true;
@@ -92,12 +83,12 @@ const FileUploader = () => {
   };
 
   const handleClick = () => {
-    var fileInputEl = document.createElement('input');
-    fileInputEl.type = 'file';
-    fileInputEl.accept = 'image/*';
-    fileInputEl.style.display = 'none';
+    var fileInputEl = document.createElement("input");
+    fileInputEl.type = "file";
+    fileInputEl.accept = "image/*";
+    fileInputEl.style.display = "none";
     document.body.appendChild(fileInputEl);
-    fileInputEl.addEventListener('input', function (e) {
+    fileInputEl.addEventListener("input", function (e) {
       handleUpload(e as any);
       document.body.removeChild(fileInputEl);
     });
@@ -105,7 +96,6 @@ const FileUploader = () => {
   };
 
   const handleUpload = async (evt: ChangeEvent<HTMLInputElement>) => {
-
     let files = evt.target.files;
     let reader = new FileReader();
     if (files && files.length > 0) {
@@ -143,6 +133,7 @@ const FileUploader = () => {
     let img = stageRef.current!.toDataURL();
     setAutographedImage(img);
     setPhoto(undefined);
+    setLines([]);
     onClose();
   };
 
@@ -150,13 +141,11 @@ const FileUploader = () => {
     try {
       let blob = dataURItoBlob(autographedImage);
       if (state.ipfs) {
-        let added = await state.ipfs.add(blob, {
-          progress: (prog: any) => console.log(`received: ${prog}`),
-        });
+        let added = await state.ipfs.add(blob, {});
         let metadata = {
           description: "Test1",
           external_url:
-            "http://localhost:8000/go/energize/0xbaa4eCBe6905c0C0841a16853C0B6BD469dF9f9D/{id}",
+            "http://staging.charged.fi/go/energize/0xbaa4eCBe6905c0C0841a16853C0B6BD469dF9f9D/{id}",
           animation_url: "",
           youtube_url: "",
           icon: "",
@@ -175,9 +164,7 @@ const FileUploader = () => {
           creatorAnnuity: 5,
           particleType: "proton",
         };
-        added = await state.ipfs.add(JSON.stringify(metadata), {
-          progress: (prog: any) => console.log(`received: ${prog}`),
-        });
+        added = await state.ipfs.add(JSON.stringify(metadata), {});
         let tokenUri = `https://gateway.ipfs.io/ipfs/${added.path}`;
         let signer = await state.web3!.getSigner();
         let signerAddress = await signer.getAddress();
@@ -213,32 +200,12 @@ const FileUploader = () => {
           <Button w="200px" onClick={handleClick}>
             Select Image
           </Button>
-          <Button w="200px" isDisabled={!autographedImage} onClick={uploadPhoto}>
-            Mint NFT
-          </Button>
-        </VStack>
-        <Modal
-          onClose={() => {setPhoto(null); onClose()}}
-          isOpen={isOpen}
-          isCentered
-          motionPreset="slideInBottom"
-        >
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Sign Below</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody h="70vh">
+          <Collapse in={isOpen} animateOpacity>
+            <VStack>
+              <Heading size="sm">Sign Below</Heading>
               <Stage
-                width={
-                  photo && photo.width < window.innerWidth
-                    ? photo.width
-                    : window.innerWidth
-                }
-                height={
-                  photo && photo.height < window.innerHeight
-                    ? photo.height
-                    : window.innerHeight
-                }
+                width={imageSize.width}
+                height={imageSize.height}
                 onMouseDown={handleMouseDown}
                 onMousemove={handleMouseMove}
                 onMouseup={handleMouseUp}
@@ -268,12 +235,20 @@ const FileUploader = () => {
                   ))}
                 </Layer>
               </Stage>
-            </ModalBody>
-            <ModalFooter>
-              <Button onClick={autographPhoto}>Autograph NFT</Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+              <HStack>
+                <Button onClick={autographPhoto}>Autograph NFT</Button>
+                <Button onClick={() => setLines([])}>Clear Autograph</Button>
+              </HStack>
+            </VStack>
+          </Collapse>
+          <Button
+            w="200px"
+            isDisabled={!autographedImage}
+            onClick={uploadPhoto}
+          >
+            Mint NFT
+          </Button>
+        </VStack>
       </Stack>
     </Box>
   );
