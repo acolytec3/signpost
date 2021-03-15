@@ -41,7 +41,10 @@ function App() {
       wallet: (wallet) => {
         try {
           //@ts-ignore
-          window.ethereum.enable();
+          if (window.ethereum) {
+            //@ts-ignore
+            window.ethereum.enable();
+          }
           web3 = new ethers.providers.Web3Provider(wallet.provider);
           dispatch({ type: "SET_WEB3", payload: { web3: web3 } });
         } catch (err) {
