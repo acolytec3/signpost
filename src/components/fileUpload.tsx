@@ -17,12 +17,16 @@ import {
   PopoverBody,
   PopoverArrow,
   PopoverCloseButton,
+  Text,
+  Spinner,
 } from "@chakra-ui/react";
+import { FiExternalLink } from 'react-icons/fi'
 import GlobalContext from "../contextx/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
 import { ethers } from "ethers";
 import { Stage, Image, Layer, Line } from "react-konva";
 import { CirclePicker } from "react-color";
+import { formatAddress } from '../helpers/helpers'
 
 const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
 
@@ -68,10 +72,11 @@ const FileUploader = () => {
   });
   const [color, setColor] = React.useState("#df4b26");
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [txn, setTxn] = React.useState<any>();
+  const [txnConfirmation, setConfirmation] = React.useState(false);
 
   React.useEffect(() => {
     if (photo && photo.width) {
-
       let aspectRatio = photo.width / photo.height;
       let newSize = {width: 0, height: 0};
       console.log(aspectRatio)
@@ -88,7 +93,7 @@ const FileUploader = () => {
   }, [photo]);
 
   React.useEffect(() => {
-    if (photo && photo.width > 0) {
+    if (photo) {
       onOpen();
     }
   }, [photo]);
@@ -210,12 +215,15 @@ const FileUploader = () => {
           ProtonAbi,
           signer
         );
-        protonContract.functions.createProton(
+        const res = await protonContract.functions.createProton(
           signerAddress,
           signerAddress,
           tokenUri,
           5
         );
+        setTxn(res);
+        console.log(res)
+        res.wait().then((res:any) => setConfirmation(true));
       }
     } catch (error) {
       console.error(error);
@@ -291,7 +299,6 @@ const FileUploader = () => {
                 onChange={(evt) => setDescription(evt.target.value)}
               />
               <HStack>
-
                 <Popover>
                   <PopoverTrigger>
                     <Button>Change Autograph Color</Button>
@@ -312,11 +319,22 @@ const FileUploader = () => {
           </Collapse>             
           <Button
             w="200px"
-            isDisabled={!autographedImage}
+            isDisabled={!autographedImage || !state.address}
             onClick={uploadPhoto}
           >
             Mint NFT
           </Button>
+          {txn && 
+          <HStack>
+            <Text>{formatAddress(txn.hash)}</Text>
+            {!txnConfirmation ? <Spinner /> 
+            : 
+            <HStack onClick={() => window.open(`https://kovan.etherscan.io/tx/${txn.hash}`,'_blank')} cursor='pointer'>
+              <Text color="green">Confirmed!</Text>
+              <FiExternalLink />
+            </HStack>}
+          </HStack>
+          }
         </VStack>
       </Stack>
     </Box>

@@ -5,12 +5,17 @@ import {
   Center,
   VStack,
   useToast,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from "@chakra-ui/react";
 import Ipfs from "ipfs";
 import FileUploader from "./components/fileUpload";
 import GlobalContext, { initialState, reducer } from "./contextx/globalContext";
 import { ethers } from "ethers";
 import Onboard from "bnc-onboard";
+import WalletDisplay from "./components/walletDisplay";
 
 let web3: any;
 
@@ -40,9 +45,6 @@ function App() {
     { walletName: "authereum" },
     { walletName: "opera" },
     { walletName: "operaTouch" },
-    { walletName: "torus" },
-    { walletName: "status" },
-    { walletName: "meetone" },
   ]
   const onboard = Onboard({
     networkId: 42,
@@ -67,10 +69,20 @@ function App() {
           });
         }
       },
+      address: (address) => {
+        dispatch({ type: "SET_ADDRESS", payload: { address: address }});
+      },
+      balance: (balance) => {
+        dispatch({ type: "SET_BALANCE", payload: { balance: balance }});
+      },
+      network: (network) => {
+        dispatch({ type: "SET_CHAIN", payload: { chain: network}})
+      }
     },
   });
 
   const handleConnect = async () => {
+    dispatch({ type:"SET_ONBOARD", payload: { onboard: onboard }})
     try {
       const walletSelected = await onboard.walletSelect();
     } catch (err) {
@@ -91,10 +103,21 @@ function App() {
       <GlobalContext.Provider value={{ dispatch, state }}>
         <Center h="90vh">
           <VStack>
-            <Button onClick={handleConnect}>Connect Web3</Button>
+            <WalletDisplay handleConnect={handleConnect} />
             <FileUploader />
           </VStack>
         </Center>
+        {state.chain && state.chain !== 42 && (
+              <Alert status="error">
+                <AlertIcon />
+                <AlertTitle mr={2}>
+                  You have the wrong chain selected
+                </AlertTitle>
+                <AlertDescription>
+                  Please switch to Kovan before continuing.
+                </AlertDescription>
+              </Alert>
+            )}
       </GlobalContext.Provider>
     </ChakraProvider>
   );
