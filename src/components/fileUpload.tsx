@@ -10,11 +10,19 @@ import {
   HStack,
   Heading,
   Input,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverArrow,
+  PopoverCloseButton,
 } from "@chakra-ui/react";
 import GlobalContext from "../contextx/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
 import { ethers } from "ethers";
 import { Stage, Image, Layer, Line } from "react-konva";
+import { CirclePicker } from "react-color";
 
 const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
 
@@ -41,6 +49,8 @@ type NftMetadata = {
   timestamp: number;
 };
 
+const STAGE_DIMENSION = 300;
+
 const FileUploader = () => {
   const { state } = React.useContext(GlobalContext);
   const [photo, setPhoto] = React.useState<any>();
@@ -56,25 +66,26 @@ const FileUploader = () => {
     width: 300,
     height: 300,
   });
-
+  const [color, setColor] = React.useState("#df4b26");
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   React.useEffect(() => {
-    if (photo) {
+    if (photo && photo.width) {
+
       let aspectRatio = photo.width / photo.height;
-      let newSize = imageSize;
-
+      let newSize = {width: 0, height: 0};
+      console.log(aspectRatio)
       if (aspectRatio >= 1) {
-        newSize.width = 300;
-        newSize.height = 300 / aspectRatio;
+        newSize.width = STAGE_DIMENSION;
+        newSize.height = STAGE_DIMENSION / aspectRatio;
       } else {
-        newSize.width = 300 * aspectRatio;
-        newSize.height = 300;
+        newSize.width = STAGE_DIMENSION * aspectRatio;
+        newSize.height = STAGE_DIMENSION;
       }
-
+      console.log(newSize)
       setImageSize(newSize);
     }
-  }, [photo, imageSize]);
+  }, [photo]);
 
   React.useEffect(() => {
     if (photo && photo.width > 0) {
@@ -219,6 +230,10 @@ const FileUploader = () => {
     setPhoto(undefined);
   };
 
+  const handleColorChange = (color: any) => {
+    setColor(color.hex)
+  }
+
   return (
     <Box>
       <Stack align="center">
@@ -252,7 +267,7 @@ const FileUploader = () => {
                     <Line
                       key={i}
                       points={line.points}
-                      stroke="#df4b26"
+                      stroke={color}
                       strokeWidth={5}
                       tension={0.5}
                       lineCap="round"
@@ -276,11 +291,25 @@ const FileUploader = () => {
                 onChange={(evt) => setDescription(evt.target.value)}
               />
               <HStack>
-                <Button onClick={autographPhoto}>Autograph NFT</Button>
+
+                <Popover>
+                  <PopoverTrigger>
+                    <Button>Change Autograph Color</Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader>Pick Color</PopoverHeader>
+                    <PopoverBody>
+                      <CirclePicker onChangeComplete={handleColorChange} />
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
                 <Button onClick={() => setLines([])}>Clear Autograph</Button>
               </HStack>
+              <Button onClick={autographPhoto}>Autograph NFT</Button>  
             </VStack>
-          </Collapse>
+          </Collapse>             
           <Button
             w="200px"
             isDisabled={!autographedImage}
