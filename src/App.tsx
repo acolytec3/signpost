@@ -35,6 +35,15 @@ function App() {
     startUp();
   }, []);
 
+  const wallets = [
+    { walletName: "metamask", preferred: true },
+    { walletName: "authereum" },
+    { walletName: "opera" },
+    { walletName: "operaTouch" },
+    { walletName: "torus" },
+    { walletName: "status" },
+    { walletName: "meetone" },
+  ]
   const onboard = Onboard({
     networkId: 42,
     subscriptions: {

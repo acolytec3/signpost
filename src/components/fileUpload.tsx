@@ -9,6 +9,7 @@ import {
   Collapse,
   HStack,
   Heading,
+  Input,
 } from "@chakra-ui/react";
 import GlobalContext from "../contextx/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
@@ -16,6 +17,29 @@ import { ethers } from "ethers";
 import { Stage, Image, Layer, Line } from "react-konva";
 
 const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
+
+type NftAttribute = {
+  name: string;
+  value: string;
+};
+
+type NftMetadata = {
+  description?: string;
+  external_url?: string;
+  animation_url?: string;
+  youtube_url?: string;
+  icon?: string;
+  image: string;
+  thumbnail: string;
+  name: string;
+  symbol?: string;
+  decimals?: number;
+  background_color?: string;
+  attributes?: NftAttribute[];
+  creatorAnnuity?: number;
+  particleType: "proton";
+  timestamp: number;
+};
 
 const FileUploader = () => {
   const { state } = React.useContext(GlobalContext);
@@ -26,9 +50,11 @@ const FileUploader = () => {
   const [lines, setLines] = React.useState<any>([]);
   const isDrawing = React.useRef(false);
   const stageRef = React.useRef(null);
+  const [name, setName] = React.useState("");
+  const [description, setDescription] = React.useState("");
   const [imageSize, setImageSize] = React.useState({
     width: 300,
-    height: 300
+    height: 300,
   });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -39,11 +65,11 @@ const FileUploader = () => {
       let newSize = imageSize;
 
       if (aspectRatio >= 1) {
-        newSize.width = 299;
-        newSize.height = 299 / aspectRatio;
+        newSize.width = 300;
+        newSize.height = 300 / aspectRatio;
       } else {
-        newSize.width = 299 * aspectRatio;
-        newSize.height = 299;
+        newSize.width = 300 * aspectRatio;
+        newSize.height = 300;
       }
 
       setImageSize(newSize);
@@ -143,27 +169,27 @@ const FileUploader = () => {
       if (state.ipfs) {
         let added = await state.ipfs.add(blob, {});
         let metadata = {
-          description: "Test1",
-          external_url:
-            "http://staging.charged.fi/go/energize/0xbaa4eCBe6905c0C0841a16853C0B6BD469dF9f9D/{id}",
-          animation_url: "",
-          youtube_url: "",
-          icon: "",
+          description: description,
           image: `https://ipfs.io/ipfs/${added.path}`,
           thumbnail: `https://ipfs.io/ipfs/${added.path}`,
-          name: "My Test Proton",
+          name: name,
           symbol: "PROTON",
           decimals: 18,
           background_color: "FFF",
           attributes: [
-            { name: "Medium", value: "Oil on Canvas" },
-            { name: "Dimensions", value: '9" x 12"' },
-            { name: "Proof of Ownership", value: "Embedded NFC" },
+            { name: "Medium", value: "Digital photograph and digital ink" },
+            {
+              name: "Dimensions",
+              value: `${imageSize.width} px x ${imageSize.height} px`,
+            },
+            { name: "Proof of Ownership", value: "Transaction Hash" },
             { name: "Edition", value: "1 of 1" },
           ],
           creatorAnnuity: 5,
           particleType: "proton",
+          timestamp: Date.now(),
         };
+
         added = await state.ipfs.add(JSON.stringify(metadata), {});
         let tokenUri = `https://gateway.ipfs.io/ipfs/${added.path}`;
         let signer = await state.web3!.getSigner();
@@ -215,7 +241,11 @@ const FileUploader = () => {
                 onTouchEnd={handleMouseUp}
               >
                 <Layer>
-                  <Image image={photo} width={imageSize.width} height={imageSize.height} />
+                  <Image
+                    image={photo}
+                    width={imageSize.width}
+                    height={imageSize.height}
+                  />
                 </Layer>
                 <Layer>
                   {lines.map((line: any, i: any) => (
@@ -235,6 +265,16 @@ const FileUploader = () => {
                   ))}
                 </Layer>
               </Stage>
+              <Input
+                value={name}
+                placeholder="Name this NFT"
+                onChange={(evt) => setName(evt.target.value)}
+              />
+              <Input
+                value={description}
+                placeholder="Describe this NFT"
+                onChange={(evt) => setDescription(evt.target.value)}
+              />
               <HStack>
                 <Button onClick={autographPhoto}>Autograph NFT</Button>
                 <Button onClick={() => setLines([])}>Clear Autograph</Button>
