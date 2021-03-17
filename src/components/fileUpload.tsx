@@ -20,13 +20,13 @@ import {
   Text,
   Spinner,
 } from "@chakra-ui/react";
-import { FiExternalLink } from 'react-icons/fi'
-import GlobalContext from "../contextx/globalContext";
-import ProtonAbi from "../contracts/Proton.json";
+import { FiExternalLink } from "react-icons/fi";
 import { ethers } from "ethers";
 import { Stage, Image, Layer, Line } from "react-konva";
 import { CirclePicker } from "react-color";
-import { formatAddress } from '../helpers/helpers'
+import { formatAddress } from "../helpers/helpers";
+import GlobalContext from "../contextx/globalContext";
+import ProtonAbi from "../contracts/Proton.json";
 
 const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
 
@@ -78,8 +78,8 @@ const FileUploader = () => {
   React.useEffect(() => {
     if (photo && photo.width) {
       let aspectRatio = photo.width / photo.height;
-      let newSize = {width: 0, height: 0};
-      console.log(aspectRatio)
+      let newSize = { width: 0, height: 0 };
+      console.log(aspectRatio);
       if (aspectRatio >= 1) {
         newSize.width = STAGE_DIMENSION;
         newSize.height = STAGE_DIMENSION / aspectRatio;
@@ -87,7 +87,7 @@ const FileUploader = () => {
         newSize.width = STAGE_DIMENSION * aspectRatio;
         newSize.height = STAGE_DIMENSION;
       }
-      console.log(newSize)
+      console.log(newSize);
       setImageSize(newSize);
     }
   }, [photo]);
@@ -208,22 +208,34 @@ const FileUploader = () => {
 
         added = await state.ipfs.add(JSON.stringify(metadata), {});
         let tokenUri = `https://gateway.ipfs.io/ipfs/${added.path}`;
+        console.log(tokenUri);
         let signer = await state.web3!.getSigner();
         let signerAddress = await signer.getAddress();
-        const protonContract = new ethers.Contract(
-          protonAddress,
-          ProtonAbi,
-          signer
-        );
-        const res = await protonContract.functions.createProton(
-          signerAddress,
-          signerAddress,
-          tokenUri,
-          5
-        );
-        setTxn(res);
-        console.log(res)
-        res.wait().then((res:any) => setConfirmation(true));
+        if (state.chain === 42) {
+          const protonContract = new ethers.Contract(
+            protonAddress,
+            ProtonAbi,
+            signer
+          );
+          const res = await protonContract.functions.createProton(
+            signerAddress,
+            signerAddress,
+            tokenUri,
+            5
+          );
+          setTxn(res);
+          console.log(res);
+          res.wait().then((res: any) => setConfirmation(true));
+        }
+        else (
+          toast({
+            position: "top",
+            status: "error",
+            title: "Wrong Network",
+            description: "Your wallet is connected to an unsupported network",
+            duration: 5000,
+          })
+        )
       }
     } catch (error) {
       console.error(error);
@@ -239,8 +251,8 @@ const FileUploader = () => {
   };
 
   const handleColorChange = (color: any) => {
-    setColor(color.hex)
-  }
+    setColor(color.hex);
+  };
 
   return (
     <Box>
@@ -314,9 +326,9 @@ const FileUploader = () => {
                 </Popover>
                 <Button onClick={() => setLines([])}>Clear Autograph</Button>
               </HStack>
-              <Button onClick={autographPhoto}>Autograph NFT</Button>  
+              <Button onClick={autographPhoto}>Autograph NFT</Button>
             </VStack>
-          </Collapse>             
+          </Collapse>
           <Button
             w="200px"
             isDisabled={!autographedImage || !state.address}
@@ -324,17 +336,27 @@ const FileUploader = () => {
           >
             Mint NFT
           </Button>
-          {txn && 
-          <HStack>
-            <Text>{formatAddress(txn.hash)}</Text>
-            {!txnConfirmation ? <Spinner /> 
-            : 
-            <HStack onClick={() => window.open(`https://kovan.etherscan.io/tx/${txn.hash}`,'_blank')} cursor='pointer'>
-              <Text color="green">Confirmed!</Text>
-              <FiExternalLink />
-            </HStack>}
-          </HStack>
-          }
+          {txn && (
+            <HStack>
+              <Text>{formatAddress(txn.hash)}</Text>
+              {!txnConfirmation ? (
+                <Spinner />
+              ) : (
+                <HStack
+                  onClick={() =>
+                    window.open(
+                      `https://kovan.etherscan.io/tx/${txn.hash}`,
+                      "_blank"
+                    )
+                  }
+                  cursor="pointer"
+                >
+                  <Text color="green">Confirmed!</Text>
+                  <FiExternalLink />
+                </HStack>
+              )}
+            </HStack>
+          )}
         </VStack>
       </Stack>
     </Box>
