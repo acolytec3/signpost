@@ -151,20 +151,31 @@ const FileUploader = () => {
   };
 
   const handleIPFSGrab = async () => {
-    let metadata = await (
-      await fetch(`https://ipfs.io/ipfs/${autographHash}`)
-    ).json();
-    setMetadata(metadata);
-    let image = await (await fetch(metadata.image)).blob();
-    console.log(image);
-    let reader = new FileReader();
-    reader.onload = function () {
-      let img = new window.Image();
-      //@ts-ignore
-      img.src = reader.result;
-      setPhoto(img);
-    };
-    reader.readAsDataURL(new File([image], "autograph.png"));
+    try {
+      let metadata = await (
+        await fetch(`https://ipfs.io/ipfs/${autographHash}`)
+      ).json();
+      setMetadata(metadata);
+      let image = await (await fetch(metadata.image)).blob();
+      console.log(image);
+      let reader = new FileReader();
+      reader.onload = function () {
+        let img = new window.Image();
+        //@ts-ignore
+        img.src = reader.result;
+        setPhoto(img);
+      };
+      reader.readAsDataURL(new File([image], "autograph.png"));
+    } catch (err) {
+      console.log(err);
+      toast({
+        position: "top",
+        status: "error",
+        title: "Something went wrong",
+        description: err.toString(),
+        duration: 5000,
+      });
+    }
   };
 
   const handleUpload = async (evt: ChangeEvent<HTMLInputElement>) => {
@@ -208,7 +219,7 @@ const FileUploader = () => {
     setLines([]);
     onClose();
     try {
-      let blob = dataURItoBlob(autographedImage);
+      let blob = dataURItoBlob(img);
       if (state.ipfs) {
         let added = await state.ipfs.add(blob, {});
         let nftMetadata = metadata;
@@ -327,7 +338,7 @@ const FileUploader = () => {
             onChange={(evt) => setHash(evt.target.value)}
           />
           <Button w="200px" onClick={handleIPFSGrab}>
-            Select Image from IPFS
+            Load Autograph from IPFS
           </Button>
           <Collapse in={isOpen} animateOpacity>
             <VStack>
@@ -399,6 +410,13 @@ const FileUploader = () => {
                 <Button onClick={() => setLines([])}>Clear Autograph</Button>
               </HStack>
               <Button onClick={autographPhoto}>Autograph NFT</Button>
+              {metadata.signatures.length > 0 && metadata.signatures.map((signature) => {
+                return (
+                  <HStack>
+                    <Text>Verified Signatures {formatAddress(ethers.utils.verifyMessage(signature.message, signature.signature))}</Text>
+                  </HStack>
+                )
+              })}
             </VStack>
           </Collapse>
           <Button
