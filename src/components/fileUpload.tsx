@@ -19,8 +19,9 @@ import {
   PopoverCloseButton,
   Text,
   Spinner,
+  useClipboard,
 } from "@chakra-ui/react";
-import { FiExternalLink } from "react-icons/fi";
+import { FiExternalLink, FiCopy } from "react-icons/fi";
 import { ethers } from "ethers";
 import { Stage, Image, Layer, Line } from "react-konva";
 import { CirclePicker } from "react-color";
@@ -86,6 +87,7 @@ const FileUploader = () => {
     signatures: [],
     description: "",
   });
+  const { hasCopied, onCopy } = useClipboard(autographHash);
 
   React.useEffect(() => {
     if (photo && photo.width) {
@@ -325,6 +327,17 @@ const FileUploader = () => {
     setColor(color.hex);
   };
 
+  const handleHashCopy = () => {
+    onCopy();
+    toast({
+      position: "top",
+      status: "success",
+      title: "IPFS hash copied",
+      description: `Share ${formatAddress(autographHash)} with a friend`,
+      duration: 5000,
+    });
+  }
+
   return (
     <Box>
       <Stack align="center">
@@ -332,11 +345,18 @@ const FileUploader = () => {
           <Button w="200px" onClick={handleFileClick}>
             Select Image from Device
           </Button>
-          <Input
-            placeholder="IPFS Autograph Hash"
-            value={autographHash}
-            onChange={(evt) => setHash(evt.target.value)}
-          />
+          {!autographHash ? (
+            <Input
+              placeholder="IPFS Autograph Hash"
+              value={autographHash}
+              onChange={(evt) => setHash(evt.target.value)}
+            />
+          ) : (
+            <HStack onClick={handleHashCopy} cursor="pointer">
+              <Text>{formatAddress(autographHash)}</Text>
+              <FiCopy />
+            </HStack>
+          )}
           <Button w="200px" onClick={handleIPFSGrab}>
             Load Autograph from IPFS
           </Button>
@@ -410,13 +430,22 @@ const FileUploader = () => {
                 <Button onClick={() => setLines([])}>Clear Autograph</Button>
               </HStack>
               <Button onClick={autographPhoto}>Autograph NFT</Button>
-              {metadata.signatures.length > 0 && metadata.signatures.map((signature) => {
-                return (
-                  <HStack>
-                    <Text>Verified Signatures {formatAddress(ethers.utils.verifyMessage(signature.message, signature.signature))}</Text>
-                  </HStack>
-                )
-              })}
+              {metadata.signatures.length > 0 &&
+                metadata.signatures.map((signature) => {
+                  return (
+                    <HStack>
+                      <Text>
+                        Verified Signatures{" "}
+                        {formatAddress(
+                          ethers.utils.verifyMessage(
+                            signature.message,
+                            signature.signature
+                          )
+                        )}
+                      </Text>
+                    </HStack>
+                  );
+                })}
             </VStack>
           </Collapse>
           <Button
