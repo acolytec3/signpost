@@ -1,9 +1,10 @@
 
 import { ethers } from 'ethers'
+import { IPFS } from 'ipfs/src'
 import React from 'react'
 
 export type globalState = {
-    ipfs: any,
+    ipfs?: IPFS,
     web3?: ethers.providers.Web3Provider,
     address?: string,
     balance: string,
@@ -12,7 +13,6 @@ export type globalState = {
   }
   
   export const initialState = {
-    ipfs: null,
     balance: '0'
   }
   

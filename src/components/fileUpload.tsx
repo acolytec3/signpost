@@ -35,6 +35,11 @@ type NftAttribute = {
   value: string;
 };
 
+type SignatureData = {
+  address: string;
+  message: string;
+  signature: string;
+};
 type NftMetadata = {
   description?: string;
   external_url?: string;
@@ -49,8 +54,9 @@ type NftMetadata = {
   background_color?: string;
   attributes?: NftAttribute[];
   creatorAnnuity?: number;
-  particleType: "proton";
-  timestamp: number;
+  particleType?: string;
+  timestamp?: number;
+  signatures: SignatureData[];
 };
 
 const STAGE_DIMENSION = 300;
@@ -64,8 +70,6 @@ const FileUploader = () => {
   const [lines, setLines] = React.useState<any>([]);
   const isDrawing = React.useRef(false);
   const stageRef = React.useRef(null);
-  const [name, setName] = React.useState("");
-  const [description, setDescription] = React.useState("");
   const [imageSize, setImageSize] = React.useState({
     width: 300,
     height: 300,
@@ -74,6 +78,14 @@ const FileUploader = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [txn, setTxn] = React.useState<any>();
   const [txnConfirmation, setConfirmation] = React.useState(false);
+  const [autographHash, setHash] = React.useState("");
+  const [metadata, setMetadata] = React.useState<NftMetadata>({
+    name: "",
+    image: "",
+    thumbnail: "",
+    signatures: [],
+    description: "",
+  });
 
   React.useEffect(() => {
     if (photo && photo.width) {
@@ -94,6 +106,7 @@ const FileUploader = () => {
 
   React.useEffect(() => {
     if (photo) {
+      console.log(photo.width);
       onOpen();
     }
   }, [photo]);
@@ -124,7 +137,7 @@ const FileUploader = () => {
     isDrawing.current = false;
   };
 
-  const handleClick = () => {
+  const handleFileClick = () => {
     var fileInputEl = document.createElement("input");
     fileInputEl.type = "file";
     fileInputEl.accept = "image/*";
@@ -135,6 +148,23 @@ const FileUploader = () => {
       document.body.removeChild(fileInputEl);
     });
     fileInputEl.click();
+  };
+
+  const handleIPFSGrab = async () => {
+    let metadata = await (
+      await fetch(`https://ipfs.io/ipfs/${autographHash}`)
+    ).json();
+    setMetadata(metadata);
+    let image = await (await fetch(metadata.image)).blob();
+    console.log(image);
+    let reader = new FileReader();
+    reader.onload = function () {
+      let img = new window.Image();
+      //@ts-ignore
+      img.src = reader.result;
+      setPhoto(img);
+    };
+    reader.readAsDataURL(new File([image], "autograph.png"));
   };
 
   const handleUpload = async (evt: ChangeEvent<HTMLInputElement>) => {
@@ -170,73 +200,103 @@ const FileUploader = () => {
     return blob;
   }
 
-  const autographPhoto = () => {
+  const autographPhoto = async () => {
     //@ts-ignore
     let img = stageRef.current!.toDataURL();
     setAutographedImage(img);
     setPhoto(undefined);
     setLines([]);
     onClose();
-  };
-
-  const uploadPhoto = async () => {
     try {
       let blob = dataURItoBlob(autographedImage);
       if (state.ipfs) {
         let added = await state.ipfs.add(blob, {});
-        let metadata = {
-          description: description,
-          image: `https://ipfs.io/ipfs/${added.path}`,
-          thumbnail: `https://ipfs.io/ipfs/${added.path}`,
-          name: name,
-          symbol: "PROTON",
-          decimals: 18,
-          background_color: "FFF",
-          attributes: [
-            { name: "Medium", value: "Digital photograph and digital ink" },
-            {
-              name: "Dimensions",
-              value: `${imageSize.width} px x ${imageSize.height} px`,
-            },
-            { name: "Proof of Ownership", value: "Transaction Hash" },
-            { name: "Edition", value: "1 of 1" },
-          ],
-          creatorAnnuity: 5,
-          particleType: "proton",
-          timestamp: Date.now(),
-        };
-
-        added = await state.ipfs.add(JSON.stringify(metadata), {});
-        let tokenUri = `https://gateway.ipfs.io/ipfs/${added.path}`;
-        console.log(tokenUri);
-        let signer = await state.web3!.getSigner();
-        let signerAddress = await signer.getAddress();
-        if (state.chain === 42) {
-          const protonContract = new ethers.Contract(
-            protonAddress,
-            ProtonAbi,
-            signer
-          );
-          const res = await protonContract.functions.createProton(
-            signerAddress,
-            signerAddress,
-            tokenUri,
-            5
-          );
-          setTxn(res);
-          console.log(res);
-          res.wait().then((res: any) => setConfirmation(true));
+        let nftMetadata = metadata;
+        if (metadata.image === "") {
+          let initialMetadata = {
+            description: metadata.description,
+            image: `https://ipfs.io/ipfs/${added.path}`,
+            thumbnail: `https://ipfs.io/ipfs/${added.path}`,
+            name: metadata.description,
+            symbol: "PROTON",
+            decimals: 18,
+            background_color: "FFF",
+            attributes: [
+              { name: "Medium", value: "Digital photograph and digital ink" },
+              {
+                name: "Dimensions",
+                value: `${imageSize.width} px x ${imageSize.height} px`,
+              },
+              { name: "Proof of Ownership", value: "Transaction Hash" },
+              { name: "Edition", value: "1 of 1" },
+            ],
+            creatorAnnuity: 5,
+            particleType: "proton",
+            signatures: [] as SignatureData[],
+          };
+          setMetadata(initialMetadata as NftMetadata);
+          nftMetadata = Object.assign(initialMetadata);
+        } else {
+          nftMetadata = {
+            ...nftMetadata,
+            image: `https://ipfs.io/ipfs/${added.path}`,
+            thumbnail: `https://ipfs.io/ipfs/${added.path}`,
+          };
         }
-        else (
-          toast({
-            position: "top",
-            status: "error",
-            title: "Wrong Network",
-            description: "Your wallet is connected to an unsupported network",
-            duration: 5000,
-          })
-        )
+
+        let signer = await state.web3!.getSigner();
+        const message = `I autographed this message at ${Date.now()}`;
+        let signature = await signer.signMessage(message);
+        nftMetadata.signatures.push({
+          address: await signer.getAddress(),
+          message: message,
+          signature: signature,
+        });
+        console.log(nftMetadata);
+        added = await state.ipfs.add(JSON.stringify(nftMetadata), {});
+        console.log("ipfs hash", added.path);
+        setHash(added.path);
       }
+    } catch (error) {
+      console.error(error);
+      toast({
+        position: "top",
+        status: "error",
+        title: "Something went wrong",
+        description: error.toString(),
+        duration: 5000,
+      });
+    }
+  };
+
+  const mintNft = async () => {
+    try {
+      let signer = await state.web3!.getSigner();
+      let tokenUri = `https://gateway.ipfs.io/ipfs/${autographHash}`;
+      let signerAddress = await signer.getAddress();
+      if (state.chain === 42) {
+        const protonContract = new ethers.Contract(
+          protonAddress,
+          ProtonAbi,
+          signer
+        );
+        const res = await protonContract.functions.createProton(
+          signerAddress,
+          signerAddress,
+          tokenUri,
+          5
+        );
+        setTxn(res);
+        console.log(res);
+        res.wait().then((res: any) => setConfirmation(true));
+      } else
+        toast({
+          position: "top",
+          status: "error",
+          title: "Wrong Network",
+          description: "Your wallet is connected to an unsupported network",
+          duration: 5000,
+        });
     } catch (error) {
       console.error(error);
       toast({
@@ -258,8 +318,16 @@ const FileUploader = () => {
     <Box>
       <Stack align="center">
         <VStack>
-          <Button w="200px" onClick={handleClick}>
-            Select Image
+          <Button w="200px" onClick={handleFileClick}>
+            Select Image from Device
+          </Button>
+          <Input
+            placeholder="IPFS Autograph Hash"
+            value={autographHash}
+            onChange={(evt) => setHash(evt.target.value)}
+          />
+          <Button w="200px" onClick={handleIPFSGrab}>
+            Select Image from IPFS
           </Button>
           <Collapse in={isOpen} animateOpacity>
             <VStack>
@@ -301,14 +369,18 @@ const FileUploader = () => {
                 </Layer>
               </Stage>
               <Input
-                value={name}
+                value={metadata.name}
                 placeholder="Name this NFT"
-                onChange={(evt) => setName(evt.target.value)}
+                onChange={(evt) =>
+                  setMetadata({ ...metadata, name: evt.target.value })
+                }
               />
               <Input
-                value={description}
+                value={metadata.description}
                 placeholder="Describe this NFT"
-                onChange={(evt) => setDescription(evt.target.value)}
+                onChange={(evt) =>
+                  setMetadata({ ...metadata, description: evt.target.value })
+                }
               />
               <HStack>
                 <Popover>
@@ -332,7 +404,7 @@ const FileUploader = () => {
           <Button
             w="200px"
             isDisabled={!autographedImage || !state.address}
-            onClick={uploadPhoto}
+            onClick={mintNft}
           >
             Mint NFT
           </Button>
