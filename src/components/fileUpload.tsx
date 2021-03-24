@@ -31,7 +31,7 @@ import ProtonAbi from "../contracts/Proton.json";
 import SignPostAbi from '../contracts/rinkebySignpost.json';
 
 const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
-const rinkebySignpostAddress = "0xe8d3f7B4b4c6D5801E48Eb1F545cf68029Ab2f23"
+const rinkebySignpostAddress = "0x8D5A137F4973DB38317497F95540fa331D062638"
 
 type NftAttribute = {
   name: string;
