@@ -47,7 +47,7 @@ function App() {
     { walletName: "operaTouch" },
   ]
   const onboard = Onboard({
-    networkId: 42,
+    networkId: state?.chain ? state.chain : 42,
     subscriptions: {
       wallet: (wallet) => {
         try {

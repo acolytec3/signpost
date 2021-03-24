@@ -13,7 +13,8 @@ export type globalState = {
   }
   
   export const initialState = {
-    balance: '0'
+    balance: '0',
+    chain: 42
   }
   
   

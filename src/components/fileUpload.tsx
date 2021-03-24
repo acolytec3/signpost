@@ -28,8 +28,10 @@ import { CirclePicker } from "react-color";
 import { formatAddress } from "../helpers/helpers";
 import GlobalContext from "../contextx/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
+import SignPostAbi from '../contracts/rinkebySignpost.json';
 
 const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
+const rinkebySignpostAddress = "0xe8d3f7B4b4c6D5801E48Eb1F545cf68029Ab2f23"
 
 type NftAttribute = {
   name: string;
@@ -302,7 +304,22 @@ const FileUploader = () => {
         setTxn(res);
         console.log(res);
         res.wait().then((res: any) => setConfirmation(true));
-      } else
+      } 
+      else if (state.chain === 4) {
+        const rinkebyContract = new ethers.Contract(
+          rinkebySignpostAddress,
+          SignPostAbi,
+          signer
+        );
+        const res = await rinkebyContract.functions.mintNFT(
+          signerAddress,
+          tokenUri,
+        );
+        setTxn(res);
+        console.log(res);
+        res.wait().then((res: any) => setConfirmation(true));
+      }
+      else
         toast({
           position: "top",
           status: "error",
