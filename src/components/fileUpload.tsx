@@ -1,34 +1,60 @@
-import React, { ChangeEvent } from "react";
 import {
-  Button,
-  Stack,
-  Box,
-  useToast,
-  VStack,
-  useDisclosure,
+  Box, Button,
+
+
+
+
+
   Collapse,
-  HStack,
-  Heading,
+
+  Heading, HStack,
+
   Input,
   Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverHeader,
-  PopoverBody,
-  PopoverArrow,
-  PopoverCloseButton,
+
+
+
+
+  PopoverArrow, PopoverBody,
+
+  PopoverCloseButton, PopoverContent,
+  PopoverHeader, PopoverTrigger,
+
+
+
+
+
+
+  Spinner, Stack,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   Text,
-  Spinner,
-  useClipboard,
+
+  useClipboard, useDisclosure, useToast,
+  VStack
 } from "@chakra-ui/react";
-import { FiExternalLink, FiCopy } from "react-icons/fi";
 import { ethers } from "ethers";
-import { Stage, Image, Layer, Line } from "react-konva";
+import React, { ChangeEvent } from "react";
 import { CirclePicker } from "react-color";
-import { formatAddress } from "../helpers/helpers";
+import { FiCopy, FiExternalLink } from "react-icons/fi";
+import { Image, Layer, Line, Stage } from "react-konva";
 import GlobalContext from "../contextx/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
 import SignPostAbi from '../contracts/rinkebySignpost.json';
+import { formatAddress } from "../helpers/helpers";
 
 const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
 const rinkebySignpostAddress = "0x8D5A137F4973DB38317497F95540fa331D062638"
@@ -89,7 +115,7 @@ const FileUploader = () => {
     signatures: [],
     description: "",
   });
-  const { hasCopied, onCopy } = useClipboard(autographHash);
+  const { onCopy } = useClipboard(autographHash);
 
   React.useEffect(() => {
     if (photo && photo.width) {
@@ -355,6 +381,40 @@ const FileUploader = () => {
     });
   }
 
+  const renderMarketLink = () => {
+    if (state.chain === 4) {
+      return (
+        <HStack
+        onClick={() =>
+          window.open(
+           `https://testnets.opensea.io/accounts/${state.address}`,
+            "_blank"
+          )
+        }
+        cursor="pointer"
+      >
+        <Text>View on your profile on OpenSea</Text>
+        <FiExternalLink />
+      </HStack>
+      )
+    }
+    else {
+      return (
+        <HStack
+        onClick={() =>
+          window.open(
+           `https://staging.charged.fi/go/profile${state.address}`,
+            "_blank"
+          )
+        }
+        cursor="pointer"
+      >
+        <Text>See on your profile on Charged Particles</Text>
+        <FiExternalLink />
+      </HStack>
+      )
+    }
+  }
   return (
     <Box>
       <Stack align="center">
@@ -470,7 +530,7 @@ const FileUploader = () => {
             isDisabled={!autographedImage || !state.address}
             onClick={mintNft}
           >
-            Mint NFT
+            {`Mint on ${state.chain === 4 ? 'Rinkeby' : 'Charged Particles'}`}
           </Button>
           {txn && (
             <HStack>
@@ -478,10 +538,11 @@ const FileUploader = () => {
               {!txnConfirmation ? (
                 <Spinner />
               ) : (
+                <VStack>
                 <HStack
                   onClick={() =>
                     window.open(
-                      `https://kovan.etherscan.io/tx/${txn.hash}`,
+                      `https://${state.chain === 4 ? 'rinkeby' : 'kovan'}.etherscan.io/tx/${txn.hash}`,
                       "_blank"
                     )
                   }
@@ -490,6 +551,8 @@ const FileUploader = () => {
                   <Text color="green">Confirmed!</Text>
                   <FiExternalLink />
                 </HStack>
+                {renderMarketLink()}
+                </VStack>
               )}
             </HStack>
           )}
