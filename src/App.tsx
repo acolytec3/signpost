@@ -107,14 +107,14 @@ function App() {
             <FileUploader />
           </VStack>
         </Center>
-        {state.chain && state.chain !== 42 && (
+        {state.chain && state.chain !== 42 && state.chain !== 4 && (
               <Alert status="error">
                 <AlertIcon />
                 <AlertTitle mr={2}>
                   You have the wrong chain selected
                 </AlertTitle>
                 <AlertDescription>
-                  Please switch to Kovan before continuing.
+                  Please switch to Rinkeby or Kovan before continuing.
                 </AlertDescription>
               </Alert>
             )}
