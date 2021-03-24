@@ -1,7 +1,6 @@
 import React from "react";
 import {
   ChakraProvider,
-  Button,
   Center,
   VStack,
   useToast,
@@ -95,11 +94,9 @@ function App() {
         duration: 5000,
       });
     }
-    //    const read = await onboard.walletCheck()
-    //    console.log(read);
   };
   return (
-    <ChakraProvider>
+    <ChakraProvider> 
       <GlobalContext.Provider value={{ dispatch, state }}>
         <Center h="90vh">
           <VStack>
@@ -107,11 +104,11 @@ function App() {
             <FileUploader />
           </VStack>
         </Center>
-        {state.chain && state.chain !== 42 && state.chain !== 4 && (
+        {state.chain && state.chain !== 42 && state.chain !== 4 &&  (
               <Alert status="error">
                 <AlertIcon />
                 <AlertTitle mr={2}>
-                  You have the wrong chain selected
+                  Unsupported network
                 </AlertTitle>
                 <AlertDescription>
                   Please switch to Rinkeby or Kovan before continuing.
