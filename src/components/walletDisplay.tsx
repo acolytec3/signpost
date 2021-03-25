@@ -13,7 +13,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import GlobalContext from "../contextx/globalContext";
+import GlobalContext from "../context/globalContext";
 import { formatAddress, formatBalance } from "../helpers/helpers";
 
 type WalletProps = {

@@ -360,13 +360,13 @@ const FileUploader = () => {
         <HStack
           onClick={() =>
             window.open(
-              `https://testnets.opensea.io/assets/${GLOBALS.CHAINS[state.chain].contractAddress}`,
+              `https://testnets.opensea.io/accounts/${state.address}`,
               "_blank"
             )
           }
           cursor="pointer"
         >
-          <Text>View on your profile on OpenSea</Text>
+          <Text>View on OpenSea</Text>
           <FiExternalLink />
         </HStack>
       );
@@ -381,7 +381,7 @@ const FileUploader = () => {
           }
           cursor="pointer"
         >
-          <Text>See on your profile on Charged Particles</Text>
+          <Text>View on Charged Particles</Text>
           <FiExternalLink />
         </HStack>
       );
@@ -506,12 +506,12 @@ const FileUploader = () => {
             {`Mint on ${state.chain === 4 ? "Rinkeby" : "Charged Particles"}`}
           </Button>
           {txn && (
+            <VStack>
             <HStack>
               <Text>{formatAddress(txn.hash)}</Text>
               {!txnConfirmation ? (
                 <Spinner />
               ) : (
-                <VStack>
                   <HStack
                     onClick={() =>
                       window.open(
@@ -526,10 +526,10 @@ const FileUploader = () => {
                     <Text color="green">Confirmed!</Text>
                     <FiExternalLink />
                   </HStack>
-                  {renderMarketLink()}
-                </VStack>
               )}
             </HStack>
+          {renderMarketLink()}
+          </VStack>
           )}
         </VStack>
       </Stack>
