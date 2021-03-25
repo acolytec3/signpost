@@ -1,7 +1,6 @@
 import React from "react";
 import {
   ChakraProvider,
-  Button,
   Center,
   VStack,
   useToast,
@@ -12,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import Ipfs from "ipfs";
 import FileUploader from "./components/fileUpload";
-import GlobalContext, { initialState, reducer } from "./contextx/globalContext";
+import GlobalContext, { initialState, reducer } from "./context/globalContext";
 import { ethers } from "ethers";
 import Onboard from "bnc-onboard";
 import WalletDisplay from "./components/walletDisplay";
@@ -47,7 +46,8 @@ function App() {
     { walletName: "operaTouch" },
   ]
   const onboard = Onboard({
-    networkId: 42,
+    dappId: '00a53f9e-0e52-4e15-8d56-76e47bea5c0c',
+    networkId: state?.chain ? state.chain : 42,
     subscriptions: {
       wallet: (wallet) => {
         try {
@@ -95,11 +95,9 @@ function App() {
         duration: 5000,
       });
     }
-    //    const read = await onboard.walletCheck()
-    //    console.log(read);
   };
   return (
-    <ChakraProvider>
+    <ChakraProvider> 
       <GlobalContext.Provider value={{ dispatch, state }}>
         <Center h="90vh">
           <VStack>
@@ -107,14 +105,14 @@ function App() {
             <FileUploader />
           </VStack>
         </Center>
-        {state.chain && state.chain !== 42 && (
+        {state.chain && state.chain !== 42 && state.chain !== 4 &&  (
               <Alert status="error">
                 <AlertIcon />
                 <AlertTitle mr={2}>
-                  You have the wrong chain selected
+                  Unsupported network
                 </AlertTitle>
                 <AlertDescription>
-                  Please switch to Kovan before continuing.
+                  Please switch to Rinkeby or Kovan before continuing.
                 </AlertDescription>
               </Alert>
             )}

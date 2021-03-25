@@ -1,40 +1,46 @@
-import React, { ChangeEvent } from "react";
 import {
-  Button,
-  Stack,
   Box,
-  useToast,
-  VStack,
-  useDisclosure,
+  Button,
   Collapse,
-  HStack,
   Heading,
+  HStack,
   Input,
   Popover,
-  PopoverTrigger,
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
   PopoverContent,
   PopoverHeader,
-  PopoverBody,
-  PopoverArrow,
-  PopoverCloseButton,
-  Text,
+  PopoverTrigger,
   Spinner,
+  Stack,
+  Text,
+  useClipboard,
+  useDisclosure,
+  useToast,
+  VStack,
 } from "@chakra-ui/react";
-import { FiExternalLink } from "react-icons/fi";
 import { ethers } from "ethers";
-import { Stage, Image, Layer, Line } from "react-konva";
+import React, { ChangeEvent } from "react";
 import { CirclePicker } from "react-color";
-import { formatAddress } from "../helpers/helpers";
-import GlobalContext from "../contextx/globalContext";
+import { FiCopy, FiExternalLink } from "react-icons/fi";
+import { Image, Layer, Line, Stage } from "react-konva";
+import GlobalContext from "../context/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
-
-const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
+import SignPostAbi from "../contracts/rinkebySignpost.json";
+import { formatAddress } from "../helpers/helpers";
+import { GLOBALS } from '../helpers/globals';
 
 type NftAttribute = {
   name: string;
   value: string;
 };
 
+type SignatureData = {
+  address: string;
+  message: string;
+  signature: string;
+};
 type NftMetadata = {
   description?: string;
   external_url?: string;
@@ -49,8 +55,9 @@ type NftMetadata = {
   background_color?: string;
   attributes?: NftAttribute[];
   creatorAnnuity?: number;
-  particleType: "proton";
-  timestamp: number;
+  particleType?: string;
+  timestamp?: number;
+  signatures: SignatureData[];
 };
 
 const STAGE_DIMENSION = 300;
@@ -64,8 +71,6 @@ const FileUploader = () => {
   const [lines, setLines] = React.useState<any>([]);
   const isDrawing = React.useRef(false);
   const stageRef = React.useRef(null);
-  const [name, setName] = React.useState("");
-  const [description, setDescription] = React.useState("");
   const [imageSize, setImageSize] = React.useState({
     width: 300,
     height: 300,
@@ -74,12 +79,21 @@ const FileUploader = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [txn, setTxn] = React.useState<any>();
   const [txnConfirmation, setConfirmation] = React.useState(false);
+  const [autographHash, setHash] = React.useState("");
+  const [metadata, setMetadata] = React.useState<NftMetadata>({
+    name: "",
+    image: "",
+    thumbnail: "",
+    signatures: [],
+    description: "",
+  });
+  const { onCopy } = useClipboard(autographHash);
 
   React.useEffect(() => {
     if (photo && photo.width) {
       let aspectRatio = photo.width / photo.height;
       let newSize = { width: 0, height: 0 };
-      console.log(aspectRatio);
+
       if (aspectRatio >= 1) {
         newSize.width = STAGE_DIMENSION;
         newSize.height = STAGE_DIMENSION / aspectRatio;
@@ -87,7 +101,7 @@ const FileUploader = () => {
         newSize.width = STAGE_DIMENSION * aspectRatio;
         newSize.height = STAGE_DIMENSION;
       }
-      console.log(newSize);
+
       setImageSize(newSize);
     }
   }, [photo]);
@@ -96,7 +110,7 @@ const FileUploader = () => {
     if (photo) {
       onOpen();
     }
-  }, [photo]);
+  }, [photo, onOpen]);
 
   const handleMouseDown = (e: any) => {
     isDrawing.current = true;
@@ -124,7 +138,7 @@ const FileUploader = () => {
     isDrawing.current = false;
   };
 
-  const handleClick = () => {
+  const handleFileClick = () => {
     var fileInputEl = document.createElement("input");
     fileInputEl.type = "file";
     fileInputEl.accept = "image/*";
@@ -135,6 +149,36 @@ const FileUploader = () => {
       document.body.removeChild(fileInputEl);
     });
     fileInputEl.click();
+  };
+
+  const handleIPFSGrab = async () => {
+    try {
+      let metadata = await (
+        await fetch(`https://ipfs.io/ipfs/${autographHash}`)
+      ).json();
+      setMetadata(metadata);
+      let image = await (await fetch(metadata.image)).blob();
+      let reader = new FileReader();
+      reader.onload = function () {
+        let img = new window.Image();
+        if (typeof reader.result === 'string') {
+          img.src = reader.result;
+          setPhoto(img);
+          setAutographedImage(reader.result)
+        }
+        
+      };
+      reader.readAsDataURL(new File([image], "autograph.png"));
+    } catch (err) {
+      console.log(err);
+      toast({
+        position: "top",
+        status: "error",
+        title: "Something went wrong",
+        description: err.toString(),
+        duration: 5000,
+      });
+    }
   };
 
   const handleUpload = async (evt: ChangeEvent<HTMLInputElement>) => {
@@ -170,73 +214,118 @@ const FileUploader = () => {
     return blob;
   }
 
-  const autographPhoto = () => {
+  const autographPhoto = async () => {
     //@ts-ignore
     let img = stageRef.current!.toDataURL();
     setAutographedImage(img);
     setPhoto(undefined);
     setLines([]);
     onClose();
-  };
-
-  const uploadPhoto = async () => {
     try {
-      let blob = dataURItoBlob(autographedImage);
+      let blob = dataURItoBlob(img);
       if (state.ipfs) {
         let added = await state.ipfs.add(blob, {});
-        let metadata = {
-          description: description,
-          image: `https://ipfs.io/ipfs/${added.path}`,
-          thumbnail: `https://ipfs.io/ipfs/${added.path}`,
-          name: name,
-          symbol: "PROTON",
-          decimals: 18,
-          background_color: "FFF",
-          attributes: [
-            { name: "Medium", value: "Digital photograph and digital ink" },
-            {
-              name: "Dimensions",
-              value: `${imageSize.width} px x ${imageSize.height} px`,
-            },
-            { name: "Proof of Ownership", value: "Transaction Hash" },
-            { name: "Edition", value: "1 of 1" },
-          ],
-          creatorAnnuity: 5,
-          particleType: "proton",
-          timestamp: Date.now(),
-        };
-
-        added = await state.ipfs.add(JSON.stringify(metadata), {});
-        let tokenUri = `https://gateway.ipfs.io/ipfs/${added.path}`;
-        console.log(tokenUri);
-        let signer = await state.web3!.getSigner();
-        let signerAddress = await signer.getAddress();
-        if (state.chain === 42) {
-          const protonContract = new ethers.Contract(
-            protonAddress,
-            ProtonAbi,
-            signer
-          );
-          const res = await protonContract.functions.createProton(
-            signerAddress,
-            signerAddress,
-            tokenUri,
-            5
-          );
-          setTxn(res);
-          console.log(res);
-          res.wait().then((res: any) => setConfirmation(true));
+        let nftMetadata = metadata;
+        if (metadata.image === "") {
+          let initialMetadata = {
+            description: metadata.description,
+            image: `https://ipfs.io/ipfs/${added.path}`,
+            thumbnail: `https://ipfs.io/ipfs/${added.path}`,
+            name: metadata.description,
+            symbol: "PROTON",
+            decimals: 18,
+            background_color: "FFF",
+            attributes: [
+              { name: "Medium", value: "Digital photograph and digital ink" },
+              {
+                name: "Dimensions",
+                value: `${imageSize.width} px x ${imageSize.height} px`,
+              },
+              { name: "Proof of Ownership", value: "Transaction Hash" },
+              { name: "Edition", value: "1 of 1" },
+            ],
+            creatorAnnuity: 5,
+            particleType: "proton",
+            signatures: [] as SignatureData[],
+          };
+          setMetadata(initialMetadata as NftMetadata);
+          nftMetadata = Object.assign(initialMetadata);
+        } else {
+          nftMetadata = {
+            ...nftMetadata,
+            image: `https://ipfs.io/ipfs/${added.path}`,
+            thumbnail: `https://ipfs.io/ipfs/${added.path}`,
+          };
         }
-        else (
-          toast({
-            position: "top",
-            status: "error",
-            title: "Wrong Network",
-            description: "Your wallet is connected to an unsupported network",
-            duration: 5000,
-          })
-        )
+
+        let signer = await state.web3!.getSigner();
+        const message = `I autographed this message at ${Date.now()}`;
+        let signature = await signer.signMessage(message);
+        nftMetadata.signatures.push({
+          address: await signer.getAddress(),
+          message: message,
+          signature: signature,
+        });
+        console.log(nftMetadata);
+        added = await state.ipfs.add(JSON.stringify(nftMetadata), {});
+        console.log("ipfs hash", added.path);
+        setHash(added.path);
       }
+    } catch (error) {
+      console.error(error);
+      toast({
+        position: "top",
+        status: "error",
+        title: "Something went wrong",
+        description: error.toString(),
+        duration: 5000,
+      });
+    }
+  };
+
+  const mintNft = async () => {
+    try {
+      let signer = await state.web3!.getSigner();
+      let tokenUri = `https://gateway.ipfs.io/ipfs/${autographHash}`;
+      let signerAddress = await signer.getAddress();
+      if (state.chain === 42) {
+        const protonContract = new ethers.Contract(
+          GLOBALS.CHAINS[state.chain].contractAddress,
+          ProtonAbi,
+          signer
+        );
+        const res = await protonContract.functions.createProton(
+          signerAddress,
+          signerAddress,
+          tokenUri,
+          5
+        );
+        setTxn(res);
+        console.log(res);
+        res.wait().then((res: any) => setConfirmation(true));
+      } else if (state.chain === 4) {
+        const rinkebyContract = new ethers.Contract(
+          GLOBALS.CHAINS[state.chain].contractAddress,
+          SignPostAbi,
+          signer
+        );
+        
+        
+        const res = await rinkebyContract.functions.mintNFT(
+          signerAddress,
+          tokenUri
+        );
+        setTxn(res);
+        console.log(res);
+        res.wait().then((res: any) => setConfirmation(true));
+      } else
+        toast({
+          position: "top",
+          status: "error",
+          title: "Wrong Network",
+          description: "Your wallet is connected to an unsupported network",
+          duration: 5000,
+        });
     } catch (error) {
       console.error(error);
       toast({
@@ -254,12 +343,73 @@ const FileUploader = () => {
     setColor(color.hex);
   };
 
+  const handleHashCopy = () => {
+    onCopy();
+    toast({
+      position: "top",
+      status: "success",
+      title: "IPFS hash copied",
+      description: `Share ${formatAddress(autographHash)} with a friend`,
+      duration: 5000,
+    });
+    
+  };
+
+  const renderMarketLink = () => {
+    if (state.chain === 4) {
+      return (
+        <HStack
+          onClick={() =>
+            window.open(
+              `https://testnets.opensea.io/accounts/${state.address}`,
+              "_blank"
+            )
+          }
+          cursor="pointer"
+        >
+          <Text>View on OpenSea</Text>
+          <FiExternalLink />
+        </HStack>
+      );
+    } else {
+      return (
+        <HStack
+          onClick={() =>
+            window.open(
+              `https://staging.charged.fi/go/profile/${state.address}`,
+              "_blank"
+            )
+          }
+          cursor="pointer"
+        >
+          <Text>View on Charged Particles</Text>
+          <FiExternalLink />
+        </HStack>
+      );
+    }
+  };
   return (
     <Box>
       <Stack align="center">
         <VStack>
-          <Button w="200px" onClick={handleClick}>
-            Select Image
+          <Button w="250px" onClick={handleFileClick}>
+            Select Image from Device
+          </Button>
+          {!autographHash ? (
+            <Input
+              w="250px"
+              placeholder="IPFS Autograph Hash"
+              value={autographHash}
+              onChange={(evt) => setHash(evt.target.value)}
+            />
+          ) : (
+            <HStack onClick={handleHashCopy} cursor="pointer">
+              <Text>{formatAddress(autographHash)}</Text>
+              <FiCopy />
+            </HStack>
+          )}
+          <Button w="250px" onClick={handleIPFSGrab}>
+            Load Autograph from IPFS
           </Button>
           <Collapse in={isOpen} animateOpacity>
             <VStack>
@@ -301,14 +451,18 @@ const FileUploader = () => {
                 </Layer>
               </Stage>
               <Input
-                value={name}
+                value={metadata.name}
                 placeholder="Name this NFT"
-                onChange={(evt) => setName(evt.target.value)}
+                onChange={(evt) =>
+                  setMetadata({ ...metadata, name: evt.target.value })
+                }
               />
               <Input
-                value={description}
+                value={metadata.description}
                 placeholder="Describe this NFT"
-                onChange={(evt) => setDescription(evt.target.value)}
+                onChange={(evt) =>
+                  setMetadata({ ...metadata, description: evt.target.value })
+                }
               />
               <HStack>
                 <Popover>
@@ -327,35 +481,56 @@ const FileUploader = () => {
                 <Button onClick={() => setLines([])}>Clear Autograph</Button>
               </HStack>
               <Button onClick={autographPhoto}>Autograph NFT</Button>
+              {metadata.signatures.length > 0 &&
+                metadata.signatures.map((signature) => {
+                  return (
+                    <HStack>
+                      <Text>
+                        Verified Signatures{" "}
+                        {formatAddress(
+                          ethers.utils.verifyMessage(
+                            signature.message,
+                            signature.signature
+                          )
+                        )}
+                      </Text>
+                    </HStack>
+                  );
+                })}
             </VStack>
           </Collapse>
           <Button
-            w="200px"
+            w="250px"
             isDisabled={!autographedImage || !state.address}
-            onClick={uploadPhoto}
+            onClick={mintNft}
           >
-            Mint NFT
+            {`Mint on ${state.chain === 4 ? "Rinkeby" : "Charged Particles"}`}
           </Button>
           {txn && (
+            <VStack>
             <HStack>
               <Text>{formatAddress(txn.hash)}</Text>
               {!txnConfirmation ? (
                 <Spinner />
               ) : (
-                <HStack
-                  onClick={() =>
-                    window.open(
-                      `https://kovan.etherscan.io/tx/${txn.hash}`,
-                      "_blank"
-                    )
-                  }
-                  cursor="pointer"
-                >
-                  <Text color="green">Confirmed!</Text>
-                  <FiExternalLink />
-                </HStack>
+                  <HStack
+                    onClick={() =>
+                      window.open(
+                        `https://${
+                          GLOBALS.CHAINS[state.chain].name
+                        }.etherscan.io/tx/${txn.hash}`,
+                        "_blank"
+                      )
+                    }
+                    cursor="pointer"
+                  >
+                    <Text color="green">Confirmed!</Text>
+                    <FiExternalLink />
+                  </HStack>
               )}
             </HStack>
+          {renderMarketLink()}
+          </VStack>
           )}
         </VStack>
       </Stack>

@@ -13,7 +13,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import GlobalContext from "../contextx/globalContext";
+import GlobalContext from "../context/globalContext";
 import { formatAddress, formatBalance } from "../helpers/helpers";
 
 type WalletProps = {
@@ -38,7 +38,7 @@ const WalletDisplay: React.FC<WalletProps> = ({ handleConnect }) => {
       {state.address ? (
         <Popover placement="top">
           <PopoverTrigger>
-            <Button w="200px">
+            <Button w="250px">
               {formatAddress(state.address)} {formatBalance(state.balance)} ETH
             </Button>
           </PopoverTrigger>
