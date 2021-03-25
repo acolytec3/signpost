@@ -1,63 +1,35 @@
 import {
-  Box, Button,
-
-
-
-
-
+  Box,
+  Button,
   Collapse,
-
-  Heading, HStack,
-
+  Heading,
+  HStack,
   Input,
   Popover,
-
-
-
-
-  PopoverArrow, PopoverBody,
-
-  PopoverCloseButton, PopoverContent,
-  PopoverHeader, PopoverTrigger,
-
-
-
-
-
-
-  Spinner, Stack,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTrigger,
+  Spinner,
+  Stack,
   Text,
-
-  useClipboard, useDisclosure, useToast,
-  VStack
+  useClipboard,
+  useDisclosure,
+  useToast,
+  VStack,
 } from "@chakra-ui/react";
 import { ethers } from "ethers";
 import React, { ChangeEvent } from "react";
 import { CirclePicker } from "react-color";
 import { FiCopy, FiExternalLink } from "react-icons/fi";
 import { Image, Layer, Line, Stage } from "react-konva";
-import GlobalContext from "../contextx/globalContext";
+import GlobalContext from "../context/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
-import SignPostAbi from '../contracts/rinkebySignpost.json';
+import SignPostAbi from "../contracts/rinkebySignpost.json";
 import { formatAddress } from "../helpers/helpers";
-
-const protonAddress = "0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2";
-const rinkebySignpostAddress = "0x8D5A137F4973DB38317497F95540fa331D062638"
+import { GLOBALS } from '../helpers/globals';
 
 type NftAttribute = {
   name: string;
@@ -121,7 +93,7 @@ const FileUploader = () => {
     if (photo && photo.width) {
       let aspectRatio = photo.width / photo.height;
       let newSize = { width: 0, height: 0 };
-      console.log(aspectRatio);
+
       if (aspectRatio >= 1) {
         newSize.width = STAGE_DIMENSION;
         newSize.height = STAGE_DIMENSION / aspectRatio;
@@ -129,7 +101,7 @@ const FileUploader = () => {
         newSize.width = STAGE_DIMENSION * aspectRatio;
         newSize.height = STAGE_DIMENSION;
       }
-      console.log(newSize);
+
       setImageSize(newSize);
     }
   }, [photo]);
@@ -317,7 +289,7 @@ const FileUploader = () => {
       let signerAddress = await signer.getAddress();
       if (state.chain === 42) {
         const protonContract = new ethers.Contract(
-          protonAddress,
+          GLOBALS.CHAINS[state.chain].contractAddress,
           ProtonAbi,
           signer
         );
@@ -330,22 +302,22 @@ const FileUploader = () => {
         setTxn(res);
         console.log(res);
         res.wait().then((res: any) => setConfirmation(true));
-      } 
-      else if (state.chain === 4) {
+      } else if (state.chain === 4) {
         const rinkebyContract = new ethers.Contract(
-          rinkebySignpostAddress,
+          GLOBALS.CHAINS[state.chain].contractAddress,
           SignPostAbi,
           signer
         );
+        
+        
         const res = await rinkebyContract.functions.mintNFT(
           signerAddress,
-          tokenUri,
+          tokenUri
         );
         setTxn(res);
         console.log(res);
         res.wait().then((res: any) => setConfirmation(true));
-      }
-      else
+      } else
         toast({
           position: "top",
           status: "error",
@@ -379,51 +351,52 @@ const FileUploader = () => {
       description: `Share ${formatAddress(autographHash)} with a friend`,
       duration: 5000,
     });
-  }
+    
+  };
 
   const renderMarketLink = () => {
     if (state.chain === 4) {
       return (
         <HStack
-        onClick={() =>
-          window.open(
-           `https://testnets.opensea.io/accounts/${state.address}`,
-            "_blank"
-          )
-        }
-        cursor="pointer"
-      >
-        <Text>View on your profile on OpenSea</Text>
-        <FiExternalLink />
-      </HStack>
-      )
-    }
-    else {
+          onClick={() =>
+            window.open(
+              `https://testnets.opensea.io/assets/${GLOBALS.CHAINS[state.chain].contractAddress}`,
+              "_blank"
+            )
+          }
+          cursor="pointer"
+        >
+          <Text>View on your profile on OpenSea</Text>
+          <FiExternalLink />
+        </HStack>
+      );
+    } else {
       return (
         <HStack
-        onClick={() =>
-          window.open(
-           `https://staging.charged.fi/go/profile${state.address}`,
-            "_blank"
-          )
-        }
-        cursor="pointer"
-      >
-        <Text>See on your profile on Charged Particles</Text>
-        <FiExternalLink />
-      </HStack>
-      )
+          onClick={() =>
+            window.open(
+              `https://staging.charged.fi/go/profile${state.address}`,
+              "_blank"
+            )
+          }
+          cursor="pointer"
+        >
+          <Text>See on your profile on Charged Particles</Text>
+          <FiExternalLink />
+        </HStack>
+      );
     }
-  }
+  };
   return (
     <Box>
       <Stack align="center">
         <VStack>
-          <Button w="200px" onClick={handleFileClick}>
+          <Button w="250px" onClick={handleFileClick}>
             Select Image from Device
           </Button>
           {!autographHash ? (
             <Input
+              w="250px"
               placeholder="IPFS Autograph Hash"
               value={autographHash}
               onChange={(evt) => setHash(evt.target.value)}
@@ -434,7 +407,7 @@ const FileUploader = () => {
               <FiCopy />
             </HStack>
           )}
-          <Button w="200px" onClick={handleIPFSGrab}>
+          <Button w="250px" onClick={handleIPFSGrab}>
             Load Autograph from IPFS
           </Button>
           <Collapse in={isOpen} animateOpacity>
@@ -526,11 +499,11 @@ const FileUploader = () => {
             </VStack>
           </Collapse>
           <Button
-            w="200px"
+            w="250px"
             isDisabled={!autographedImage || !state.address}
             onClick={mintNft}
           >
-            {`Mint on ${state.chain === 4 ? 'Rinkeby' : 'Charged Particles'}`}
+            {`Mint on ${state.chain === 4 ? "Rinkeby" : "Charged Particles"}`}
           </Button>
           {txn && (
             <HStack>
@@ -539,19 +512,21 @@ const FileUploader = () => {
                 <Spinner />
               ) : (
                 <VStack>
-                <HStack
-                  onClick={() =>
-                    window.open(
-                      `https://${state.chain === 4 ? 'rinkeby' : 'kovan'}.etherscan.io/tx/${txn.hash}`,
-                      "_blank"
-                    )
-                  }
-                  cursor="pointer"
-                >
-                  <Text color="green">Confirmed!</Text>
-                  <FiExternalLink />
-                </HStack>
-                {renderMarketLink()}
+                  <HStack
+                    onClick={() =>
+                      window.open(
+                        `https://${
+                          GLOBALS.CHAINS[state.chain].name
+                        }.etherscan.io/tx/${txn.hash}`,
+                        "_blank"
+                      )
+                    }
+                    cursor="pointer"
+                  >
+                    <Text color="green">Confirmed!</Text>
+                    <FiExternalLink />
+                  </HStack>
+                  {renderMarketLink()}
                 </VStack>
               )}
             </HStack>

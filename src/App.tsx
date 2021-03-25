@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import Ipfs from "ipfs";
 import FileUploader from "./components/fileUpload";
-import GlobalContext, { initialState, reducer } from "./contextx/globalContext";
+import GlobalContext, { initialState, reducer } from "./context/globalContext";
 import { ethers } from "ethers";
 import Onboard from "bnc-onboard";
 import WalletDisplay from "./components/walletDisplay";

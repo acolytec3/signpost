@@ -9,7 +9,7 @@ export type globalState = {
     address?: string,
     balance: string,
     onboard?: any,
-    chain?: number
+    chain: number
   }
   
   export const initialState = {
