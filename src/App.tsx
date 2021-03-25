@@ -46,6 +46,7 @@ function App() {
     { walletName: "operaTouch" },
   ]
   const onboard = Onboard({
+    dappId: '00a53f9e-0e52-4e15-8d56-76e47bea5c0c',
     networkId: state?.chain ? state.chain : 42,
     subscriptions: {
       wallet: (wallet) => {
