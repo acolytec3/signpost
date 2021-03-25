@@ -82,6 +82,22 @@ Viewing a multi-signature NFT on Opensea
 - Paste your JSON object into the Signature text box on the MyEtherWallet tab and then press "Verify Message"
 - You should see a confirmation message displayed validating that the indicated Ethereum private key associated with the address did sign the message
 
+## Ensuring your NFTs don't disappear
+
+The perennial challenge of NFTs is ensuring that your pretty picture, autograph, and wallet signatures never disappear.  This app has not fully solved that problem and doesn't pretend to provide a turnkey solution.  That said, here is one option for ensuring your beautiful autographs don't disappear when the IPFS garbage collector comes calling.
+
+- Go to [Pinata](https://pinata.cloud), sign up for a free account, and login
+- Get the `tokenURI` for your NFT as described above and open it in a new browser tab.  It will look something like this:
+`https://gateway.ipfs.io/ipfs/QmSABFRrwuapNezL2FNjNQzDcrGs2KVje1Yz9SurxyBaio`
+- Copy the last part of the URL that starts with `Qm...`.  This is the IPFS hash or CID 
+- Go back to your Pinata account, click the big Upload button, and then select the CID option
+- Paste the IPFS hash you copied into the "IPFS CID to PIN" text box, give it a name if desired, and then select "Search and Pin"
+- Now, go back to your tab with the tokenURI
+- Find the section of it that starts `"image":"https://gateway.ipfs.io/ipfs/Qm..."` and copy the `Qm...` part and then repeat the above process.
+- This will ensure that both your NFT metadata and the image linked to it are pinned on IPFS
+Your Pinata dashboard should look something like this if everything went okay. 
+![](./pinmanager.png)
+
 ## Current Limitations due to Testnet deployment
 
 - Only available on Kovan/Rinkeby
