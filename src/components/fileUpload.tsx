@@ -108,10 +108,9 @@ const FileUploader = () => {
 
   React.useEffect(() => {
     if (photo) {
-      console.log(photo.width);
       onOpen();
     }
-  }, [photo]);
+  }, [photo, onOpen]);
 
   const handleMouseDown = (e: any) => {
     isDrawing.current = true;
@@ -159,13 +158,15 @@ const FileUploader = () => {
       ).json();
       setMetadata(metadata);
       let image = await (await fetch(metadata.image)).blob();
-      console.log(image);
       let reader = new FileReader();
       reader.onload = function () {
         let img = new window.Image();
-        //@ts-ignore
-        img.src = reader.result;
-        setPhoto(img);
+        if (typeof reader.result === 'string') {
+          img.src = reader.result;
+          setPhoto(img);
+          setAutographedImage(reader.result)
+        }
+        
       };
       reader.readAsDataURL(new File([image], "autograph.png"));
     } catch (err) {
