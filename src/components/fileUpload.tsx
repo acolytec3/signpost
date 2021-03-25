@@ -375,7 +375,7 @@ const FileUploader = () => {
         <HStack
           onClick={() =>
             window.open(
-              `https://staging.charged.fi/go/profile${state.address}`,
+              `https://staging.charged.fi/go/profile/${state.address}`,
               "_blank"
             )
           }

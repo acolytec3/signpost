@@ -2,16 +2,22 @@
 
 ## Description
 
-SignPost is a simple interface for autographing any picture or photo and then minting it as an ERC-721 on Ethereum using the Charged Particles Proton NFT contract.  App can be accessed at [https://signpost.vercel.app](https://signpost.vercel.app).
+SignPost is a simple interface for autographing any picture or photo and then minting it as an ERC-721 compliant NFT on Ethereum.  App can be accessed at [https://signpost.vercel.app](https://signpost.vercel.app).
 
-This app is currently deployed on the Kovan testnet and KovanETH can be acquired from the [testnet Gitter faucet](https://gitter.im/kovan-testnet/faucet).
+This app currently supports two testnets:
+- the Charged Particles NFT contract on the Kovan testnet - [Etherscan link](https://kovan.etherscan.io/contract/0xD4F7389297d9cea850777EA6ccBD7Db5817a12b2)
+- the Signpost V3 contract on the Rinkeby testnet - [Etherscan link](https://rinkeby.etherscan.io/contract/0x8D5A137F4973DB38317497F95540fa331D062638)
 
 Using the app on mobile
 ![Using the app on Metamask Mobile](./output.gif)
 
 Seeing the autographed NFT on the Charged Particles marketplace
 ![My button on Charged Particles](./multisig.png)
-## Notes on usage
+## Current Limitations due to Testnet deployment
 
-Due to testnet limitations, SignPost is currently accessible from your desktop browser via Metamask or else from the Metamask Mobile app on any mobile device.  Once mainnet capability is turned on, additional desktop and mobile wallets will be supported.  Also, because no major NFT marketplaces have testnet connectivity to Kovan, the minted NFTs are only currently available on the Charged Particles marketplace, [Kovan testnet edition](https://staging.charged.fi/).
-
+- Only available on Kovan/Rinkeby
+- Only supports following wallets
+    - Desktop -Metamask and Torus
+    - Mobile - Metamask Mobile, Opera Touch
+- NFTs are only visible on OpenSea on Rinkeby 
+- NFT metadata is currently stored on IPFS so not guaranteed to be preserved if additional pinning functionality is not built
