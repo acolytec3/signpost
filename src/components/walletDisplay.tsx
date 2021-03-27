@@ -60,7 +60,7 @@ const WalletDisplay: React.FC<WalletProps> = ({ handleConnect }) => {
           </PopoverContent>
         </Popover>
       ) : (
-        <Button w="200px" onClick={handleConnect}>
+        <Button w="250px" onClick={handleConnect}>
           Connect Web3
         </Button>
       )}

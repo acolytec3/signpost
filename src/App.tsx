@@ -15,6 +15,7 @@ import GlobalContext, { initialState, reducer } from "./context/globalContext";
 import { ethers } from "ethers";
 import Onboard from "bnc-onboard";
 import WalletDisplay from "./components/walletDisplay";
+import GithubCorner from "react-github-corner";
 
 let web3: any;
 
@@ -41,10 +42,10 @@ function App() {
 
   const wallets = [
     { walletName: "metamask", preferred: true },
-    { walletName: "torus"},
+    { walletName: "torus" },
     { walletName: "opera" },
     { walletName: "operaTouch" },
-  ]
+  ];
   const onboard = Onboard({
     networkId: state?.chain ? state.chain : 42,
     subscriptions: {
@@ -69,22 +70,22 @@ function App() {
         }
       },
       address: (address) => {
-        dispatch({ type: "SET_ADDRESS", payload: { address: address }});
+        dispatch({ type: "SET_ADDRESS", payload: { address: address } });
       },
       balance: (balance) => {
-        dispatch({ type: "SET_BALANCE", payload: { balance: balance }});
+        dispatch({ type: "SET_BALANCE", payload: { balance: balance } });
       },
       network: (network) => {
-        dispatch({ type: "SET_CHAIN", payload: { chain: network}})
+        dispatch({ type: "SET_CHAIN", payload: { chain: network } });
       },
     },
     walletSelect: {
-      wallets: wallets
-  }
+      wallets: wallets,
+    },
   });
 
   const handleConnect = async () => {
-    dispatch({ type:"SET_ONBOARD", payload: { onboard: onboard }})
+    dispatch({ type: "SET_ONBOARD", payload: { onboard: onboard } });
     try {
       const walletSelected = await onboard.walletSelect();
     } catch (err) {
@@ -99,25 +100,30 @@ function App() {
     }
   };
   return (
-    <ChakraProvider> 
+    <ChakraProvider>
       <GlobalContext.Provider value={{ dispatch, state }}>
+        <GithubCorner
+          href="https://github.com/acolytec3/signpost"
+          bannerColor="#000"
+          octoColor="#fff"
+          size={80}
+          direction="left"
+        />
         <Center h="90vh">
           <VStack>
             <WalletDisplay handleConnect={handleConnect} />
             <FileUploader />
           </VStack>
         </Center>
-        {state.chain && state.chain !== 42 && state.chain !== 4 &&  (
-              <Alert status="error">
-                <AlertIcon />
-                <AlertTitle mr={2}>
-                  Unsupported network
-                </AlertTitle>
-                <AlertDescription>
-                  Please switch to Rinkeby or Kovan before continuing.
-                </AlertDescription>
-              </Alert>
-            )}
+        {state.chain && state.chain !== 42 && state.chain !== 4 && (
+          <Alert status="error">
+            <AlertIcon />
+            <AlertTitle mr={2}>Unsupported network</AlertTitle>
+            <AlertDescription>
+              Please switch to Rinkeby or Kovan before continuing.
+            </AlertDescription>
+          </Alert>
+        )}
       </GlobalContext.Provider>
     </ChakraProvider>
   );
