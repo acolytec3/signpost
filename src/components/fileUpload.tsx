@@ -105,17 +105,6 @@ const FileUploader = () => {
     }
   }, [photo]);
 
-  React.useEffect(() => {
-    if (photo) {
-      if (photo.width > 0) {
-        onOpen();
-      }
-      else {
-        handleIPFSGrab();
-      }
-    }
-  }, [photo, onOpen]);
-
   const handleMouseDown = (e: any) => {
     isDrawing.current = true;
     const pos = e.target.getStage().getPointerPosition();
@@ -167,8 +156,11 @@ const FileUploader = () => {
         if (typeof reader.result === 'string') {
           let img = new window.Image();
           img.src = reader.result;
-          setPhoto(img);
-          setAutographedImage(reader.result)
+          img.onload = function () {
+            setPhoto(img);
+            setAutographedImage(reader.result)
+            onOpen();
+          }
         }
         
       };
@@ -193,7 +185,10 @@ const FileUploader = () => {
         let img = new window.Image();
         //@ts-ignore
         img.src = reader.result;
-        setPhoto(img);
+        img.onload = function () {
+          setPhoto(img)
+          onOpen();
+        }
       };
       reader.readAsDataURL(files[0]);
     }
