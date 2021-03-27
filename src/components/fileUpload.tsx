@@ -101,14 +101,18 @@ const FileUploader = () => {
         newSize.width = STAGE_DIMENSION * aspectRatio;
         newSize.height = STAGE_DIMENSION;
       }
-
       setImageSize(newSize);
     }
   }, [photo]);
 
   React.useEffect(() => {
     if (photo) {
-      onOpen();
+      if (photo.width > 0) {
+        onOpen();
+      }
+      else {
+        handleIPFSGrab();
+      }
     }
   }, [photo, onOpen]);
 
@@ -160,8 +164,8 @@ const FileUploader = () => {
       let image = await (await fetch(metadata.image)).blob();
       let reader = new FileReader();
       reader.onload = function () {
-        let img = new window.Image();
         if (typeof reader.result === 'string') {
+          let img = new window.Image();
           img.src = reader.result;
           setPhoto(img);
           setAutographedImage(reader.result)

@@ -41,12 +41,11 @@ function App() {
 
   const wallets = [
     { walletName: "metamask", preferred: true },
-    { walletName: "authereum" },
+    { walletName: "torus"},
     { walletName: "opera" },
     { walletName: "operaTouch" },
   ]
   const onboard = Onboard({
-    dappId: '00a53f9e-0e52-4e15-8d56-76e47bea5c0c',
     networkId: state?.chain ? state.chain : 42,
     subscriptions: {
       wallet: (wallet) => {
@@ -77,8 +76,11 @@ function App() {
       },
       network: (network) => {
         dispatch({ type: "SET_CHAIN", payload: { chain: network}})
-      }
+      },
     },
+    walletSelect: {
+      wallets: wallets
+  }
   });
 
   const handleConnect = async () => {
