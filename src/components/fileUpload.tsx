@@ -517,7 +517,7 @@ const FileUploader = () => {
                 </Popover>
                 <Button onClick={() => setLines([])}>Clear Autograph</Button>
               </HStack>
-              <Button onClick={autographPhoto}>Autograph NFT</Button>
+              <Button onClick={autographPhoto} disabled={!state.web3}>Autograph NFT</Button>
               {metadata.signatures.length > 0 &&
                 metadata.signatures.map((signature) => {
                   return (
