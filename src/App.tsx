@@ -16,8 +16,8 @@ import { ethers } from "ethers";
 import Onboard from "bnc-onboard";
 import WalletDisplay from "./components/walletDisplay";
 import GithubCorner from "react-github-corner";
-
-let web3: any;
+import { GLOBALS } from './helpers/globals';
+let web3: ethers.providers.Web3Provider;
 
 function App() {
   const [state, dispatch] = React.useReducer(reducer, initialState);
@@ -41,7 +41,7 @@ function App() {
   }, []);
 
   const wallets = [
-    { walletName: "metamask", preferred: true },
+    { walletName: "metamask" },
     { walletName: "torus" },
     { walletName: "opera" },
     { walletName: "operaTouch" },
@@ -94,7 +94,7 @@ function App() {
         position: "top",
         status: "error",
         title: "Something went wrong",
-        description: err.toString(),
+        description: err?.toString(),
         duration: 5000,
       });
     }
@@ -115,12 +115,12 @@ function App() {
             <FileUploader />
           </VStack>
         </Center>
-        {state.chain && state.chain !== 42 && state.chain !== 4 && (
+        {Object.keys(GLOBALS.CHAINS).filter(chainId => chainId === state.chain.toString()).length < 1 && (
           <Alert status="error">
             <AlertIcon />
             <AlertTitle mr={2}>Unsupported network</AlertTitle>
             <AlertDescription>
-              Please switch to Rinkeby or Kovan before continuing.
+              Please switch to a supported network before continuing.
             </AlertDescription>
           </Alert>
         )}

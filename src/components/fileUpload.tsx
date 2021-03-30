@@ -29,7 +29,7 @@ import GlobalContext from "../context/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
 import SignPostAbi from "../contracts/rinkebySignpost.json";
 import { formatAddress } from "../helpers/helpers";
-import { GLOBALS } from '../helpers/globals';
+import { GLOBALS } from "../helpers/globals";
 
 type NftAttribute = {
   name: string;
@@ -77,8 +77,8 @@ const FileUploader = () => {
   });
   const [color, setColor] = React.useState("#df4b26");
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [txn, setTxn] = React.useState<any>();
-  const [txnConfirmation, setConfirmation] = React.useState(false);
+  const [txn, setTxn] = React.useState<any>({hash:'0x61256c834d68730a637ccd9c570275e65c216773f5958e9f0f80f0ac0a8d983e'});
+  const [txnConfirmation, setConfirmation] = React.useState(true);
   const [autographHash, setHash] = React.useState("");
   const [metadata, setMetadata] = React.useState<NftMetadata>({
     name: "",
@@ -153,16 +153,15 @@ const FileUploader = () => {
       let image = await (await fetch(metadata.image)).blob();
       let reader = new FileReader();
       reader.onload = function () {
-        if (typeof reader.result === 'string') {
+        if (typeof reader.result === "string") {
           let img = new window.Image();
           img.src = reader.result;
           img.onload = function () {
             setPhoto(img);
-            setAutographedImage(reader.result)
+            setAutographedImage(reader.result);
             onOpen();
-          }
+          };
         }
-        
       };
       reader.readAsDataURL(new File([image], "autograph.png"));
     } catch (err) {
@@ -186,9 +185,9 @@ const FileUploader = () => {
         //@ts-ignore
         img.src = reader.result;
         img.onload = function () {
-          setPhoto(img)
+          setPhoto(img);
           onOpen();
-        }
+        };
       };
       reader.readAsDataURL(files[0]);
     }
@@ -287,7 +286,7 @@ const FileUploader = () => {
       let signer = await state.web3!.getSigner();
       let tokenUri = `https://gateway.ipfs.io/ipfs/${autographHash}`;
       let signerAddress = await signer.getAddress();
-      if (state.chain === 42) {
+      if (state.chain === 42 || state.chain === 1) {
         const protonContract = new ethers.Contract(
           GLOBALS.CHAINS[state.chain].contractAddress,
           ProtonAbi,
@@ -308,8 +307,6 @@ const FileUploader = () => {
           SignPostAbi,
           signer
         );
-        
-        
         const res = await rinkebyContract.functions.mintNFT(
           signerAddress,
           tokenUri
@@ -351,7 +348,6 @@ const FileUploader = () => {
       description: `Share ${formatAddress(autographHash)} with a friend`,
       duration: 5000,
     });
-    
   };
 
   const renderMarketLink = () => {
@@ -370,7 +366,7 @@ const FileUploader = () => {
           <FiExternalLink />
         </HStack>
       );
-    } else {
+    } else if (state.chain === 42) {
       return (
         <HStack
           onClick={() =>
@@ -385,8 +381,50 @@ const FileUploader = () => {
           <FiExternalLink />
         </HStack>
       );
+    } else if (state.chain === 1) {
+      return (
+        <HStack
+          onClick={() =>
+            window.open(
+              `https://app.charged.fi/go/profile/${state.address}`,
+              "_blank"
+            )
+          }
+          cursor="pointer"
+        >
+          <Text>View on Charged Particles</Text>
+          <FiExternalLink />
+        </HStack>
+      );
     }
   };
+
+  const _renderEtherscanLink = () => {
+    let name = ''
+
+    switch (state.chain) {
+      case 1: name = ''; break;
+      case 4: name = 'rinkeby.'; break;
+      case 42: name = 'kovan.'; break;
+    }
+    return (
+      <HStack
+        onClick={() =>
+          window.open(
+            `https://${name}etherscan.io/tx/${
+              txn.hash
+            }`,
+            "_blank"
+          )
+        }
+        cursor="pointer"
+      >
+        <Text color="green">Confirmed!</Text>
+        <FiExternalLink />
+      </HStack>
+    );
+  };
+
   return (
     <Box>
       <Stack align="center">
@@ -507,29 +545,12 @@ const FileUploader = () => {
           </Button>
           {txn && (
             <VStack>
-            <HStack>
-              <Text>{formatAddress(txn.hash)}</Text>
-              {!txnConfirmation ? (
-                <Spinner />
-              ) : (
-                  <HStack
-                    onClick={() =>
-                      window.open(
-                        `https://${
-                          GLOBALS.CHAINS[state.chain].name
-                        }.etherscan.io/tx/${txn.hash}`,
-                        "_blank"
-                      )
-                    }
-                    cursor="pointer"
-                  >
-                    <Text color="green">Confirmed!</Text>
-                    <FiExternalLink />
-                  </HStack>
-              )}
-            </HStack>
-          {renderMarketLink()}
-          </VStack>
+              <HStack>
+                <Text>{formatAddress(txn.hash)}</Text>
+                {!txnConfirmation ? <Spinner /> : _renderEtherscanLink()}
+              </HStack>
+              {renderMarketLink()}
+            </VStack>
           )}
         </VStack>
       </Stack>
