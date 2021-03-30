@@ -77,8 +77,8 @@ const FileUploader = () => {
   });
   const [color, setColor] = React.useState("#df4b26");
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [txn, setTxn] = React.useState<any>({hash:'0x61256c834d68730a637ccd9c570275e65c216773f5958e9f0f80f0ac0a8d983e'});
-  const [txnConfirmation, setConfirmation] = React.useState(true);
+  const [txn, setTxn] = React.useState<any>();
+  const [txnConfirmation, setConfirmation] = React.useState(false);
   const [autographHash, setHash] = React.useState("");
   const [metadata, setMetadata] = React.useState<NftMetadata>({
     name: "",
