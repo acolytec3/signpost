@@ -43,7 +43,6 @@ function App() {
   const wallets = [
     { walletName: "metamask", preferred: true },
     { walletName: "trust", preferred: true},
-    { walletName: "status", preferred: true},
     { walletName: "torus" },
     { walletName: "opera" },
     { walletName: "operaTouch" },
