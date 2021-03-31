@@ -11,6 +11,8 @@ import {
   Text,
   Link,
   Heading,
+  Fade,
+  SlideFade,
 } from "@chakra-ui/react";
 import Ipfs from "ipfs";
 import FileUploader from "./components/fileUpload";
@@ -118,7 +120,9 @@ function App() {
             <Heading>SignPost</Heading>
             <Text size="xs" mb="2em">Sign your NFT</Text>
             <WalletDisplay handleConnect={handleConnect} />
-            <FileUploader />
+            <SlideFade in={state.web3 !== undefined}>
+              <FileUploader />
+            </SlideFade>
           </VStack>
         </Center>
         <Alert status="info">
@@ -136,7 +140,7 @@ function App() {
             </Text>
           </AlertDescription>
         </Alert>
-        {state.web3 && Object.keys(GLOBALS.CHAINS).filter(
+        {state.chain && Object.keys(GLOBALS.CHAINS).filter(
           (chainId) => chainId === state.chain.toString()
         ).length < 1 && (
           <Alert status="error">
