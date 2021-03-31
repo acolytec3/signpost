@@ -8,6 +8,9 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
+  Text,
+  Link,
+  Heading,
 } from "@chakra-ui/react";
 import Ipfs from "ipfs";
 import FileUploader from "./components/fileUpload";
@@ -16,7 +19,7 @@ import { ethers } from "ethers";
 import Onboard from "bnc-onboard";
 import WalletDisplay from "./components/walletDisplay";
 import GithubCorner from "react-github-corner";
-import { GLOBALS } from './helpers/globals';
+import { GLOBALS } from "./helpers/globals";
 let web3: ethers.providers.Web3Provider;
 
 function App() {
@@ -28,7 +31,7 @@ function App() {
       //@ts-ignore
       let ipfs = await Ipfs.create({
         relay: { enabled: true, hop: { enabled: true, active: true } },
-        repo: "ipfs-cp",
+
       });
       dispatch({ type: "START_IPFS", payload: { ipfs: ipfs } });
     } catch (error) {
@@ -42,7 +45,7 @@ function App() {
 
   const wallets = [
     { walletName: "metamask", preferred: true },
-    { walletName: "trust", preferred: true},
+    { walletName: "trust", preferred: true },
     { walletName: "torus" },
     { walletName: "opera" },
     { walletName: "operaTouch" },
@@ -65,7 +68,7 @@ function App() {
             position: "top",
             status: "error",
             title: "Something went wrong",
-            description: err.toString(),
+            description: err?.toString(),
             duration: 5000,
           });
         }
@@ -112,11 +115,30 @@ function App() {
         />
         <Center h="90vh">
           <VStack>
+            <Heading>SignPost</Heading>
+            <Text size="xs" mb="2em">Sign your NFT</Text>
             <WalletDisplay handleConnect={handleConnect} />
             <FileUploader />
           </VStack>
         </Center>
-        {Object.keys(GLOBALS.CHAINS).filter(chainId => chainId === state.chain.toString()).length < 1 && (
+        <Alert status="info">
+          <AlertIcon />
+          <AlertDescription>
+            <Text>
+              Click{" "}
+              <Link
+                href="https://github.com/acolytec3/signpost/blob/master/README.md#usage"
+                color="teal.500"
+              >
+                here
+              </Link>{" "}
+              for usage instructions
+            </Text>
+          </AlertDescription>
+        </Alert>
+        {state.web3 && Object.keys(GLOBALS.CHAINS).filter(
+          (chainId) => chainId === state.chain.toString()
+        ).length < 1 && (
           <Alert status="error">
             <AlertIcon />
             <AlertTitle mr={2}>Unsupported network</AlertTitle>
