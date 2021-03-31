@@ -521,8 +521,8 @@ const FileUploader = () => {
               {metadata.signatures.length > 0 &&
                 metadata.signatures.map((signature) => {
                   return (
-                    <HStack>
-                      <Text>
+                    <HStack key={signature.signature}>
+                      <Text key={signature.message}>
                         Verified Signatures{" "}
                         {formatAddress(
                           ethers.utils.verifyMessage(
