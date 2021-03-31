@@ -42,6 +42,7 @@ function App() {
 
   const wallets = [
     { walletName: "metamask" },
+    { walletName: "trust"},
     { walletName: "torus" },
     { walletName: "opera" },
     { walletName: "operaTouch" },
