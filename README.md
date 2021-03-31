@@ -22,7 +22,7 @@ This app currently supports the following networks/contracts:
 ### Multiple signatures
 
 #### First signature
-- Connect to your preferred network (Kovan or Rinkeby)
+- Connect to your preferred network
 - Select an image
 - Autograph your image anywhere within the image itself
 - Select "Autograph NFT" and then sign the message presented
@@ -42,7 +42,7 @@ This app currently supports the following networks/contracts:
 - Select "Mint NFT" to mint on your preferred network
 
 ### Viewing your NFT
-- Kovan 
+- Kovan/Mainnet 
     - Go to [Charged Particles](https://staging.charged.fi) and connect the wallet that minted the particle
     - View your NFT
 - Rinkeby
