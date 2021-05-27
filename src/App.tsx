@@ -125,7 +125,7 @@ function App() {
             </SlideFade>
           </VStack>
         </Center>
-        <Alert status="info">
+        {!state.web3 && <Alert status="info">
           <AlertIcon />
           <AlertDescription>
             <Text>
@@ -139,7 +139,7 @@ function App() {
               for usage instructions
             </Text>
           </AlertDescription>
-        </Alert>
+        </Alert>}
         {state.chain && Object.keys(GLOBALS.CHAINS).filter(
           (chainId) => chainId === state.chain.toString()
         ).length < 1 && (
