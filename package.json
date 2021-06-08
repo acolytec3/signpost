@@ -20,6 +20,7 @@
     "framer-motion": "^3.10.2",
     "ipfs": "^0.54.4",
     "konva": "^7.2.5",
+    "nft.storage": "^2.0.0",
     "react": "^17.0.1",
     "react-color": "^2.19.3",
     "react-dom": "^17.0.1",

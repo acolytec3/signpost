@@ -25,6 +25,7 @@ import React, { ChangeEvent } from "react";
 import { CirclePicker } from "react-color";
 import { FiCopy, FiExternalLink } from "react-icons/fi";
 import { Image, Layer, Line, Stage } from "react-konva";
+import { NFTStorage, Blob } from 'nft.storage'
 import GlobalContext from "../context/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
 import SignPostAbi from "../contracts/rinkebySignpost.json";
@@ -61,6 +62,10 @@ type NftMetadata = {
 };
 
 const STAGE_DIMENSION = 300;
+
+const apiKey = process.env.REACT_APP_NFTSTORAGEKEY;
+//@ts-ignore
+const client = new NFTStorage({ token: apiKey })
 
 const FileUploader = () => {
   const { state } = React.useContext(GlobalContext);
@@ -222,13 +227,13 @@ const FileUploader = () => {
     try {
       let blob = dataURItoBlob(img);
       if (state.ipfs) {
-        let added = await state.ipfs.add(blob, {});
+        let added = await client.storeBlob(blob);
         let nftMetadata = metadata;
         if (metadata.image === "") {
           let initialMetadata = {
             description: metadata.description,
-            image: `https://ipfs.io/ipfs/${added.path}`,
-            thumbnail: `https://ipfs.io/ipfs/${added.path}`,
+            image: `https://ipfs.io/ipfs/${added}`,
+            thumbnail: `https://ipfs.io/ipfs/${added}`,
             name: metadata.description,
             symbol: "PROTON",
             decimals: 18,
@@ -251,8 +256,8 @@ const FileUploader = () => {
         } else {
           nftMetadata = {
             ...nftMetadata,
-            image: `https://ipfs.io/ipfs/${added.path}`,
-            thumbnail: `https://ipfs.io/ipfs/${added.path}`,
+            image: `https://ipfs.io/ipfs/${added}`,
+            thumbnail: `https://ipfs.io/ipfs/${added}`,
           };
         }
 
@@ -265,9 +270,9 @@ const FileUploader = () => {
           signature: signature,
         });
         console.log(nftMetadata);
-        added = await state.ipfs.add(JSON.stringify(nftMetadata), {});
-        console.log("ipfs hash", added.path);
-        setHash(added.path);
+        added = await client.storeBlob(new Blob([JSON.stringify(nftMetadata)]));
+        console.log("ipfs hash", added);
+        setHash(added);
       }
     } catch (error) {
       console.error(error);

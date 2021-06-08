@@ -85,7 +85,7 @@ Viewing a multi-signature NFT on Opensea
 
 ## Ensuring your NFTs don't disappear
 
-The perennial challenge of NFTs is ensuring that your pretty picture, autograph, and wallet signatures never disappear.  This app has not fully solved that problem and doesn't pretend to provide a turnkey solution.  That said, here is one option for ensuring your beautiful autographs don't disappear when the IPFS garbage collector comes calling.
+The perennial challenge of NFTs is ensuring that your pretty picture, autograph, and wallet signatures never disappear.  This app has not fully solved that problem but does currently integrate with [nft.storage](https://nft.storage) to provide (hopefully) a long lifespan for your NFT metadata.  Alternatively, use Pinata as your own pinning service if so desired (as described below). 
 
 - Go to [Pinata](https://pinata.cloud), sign up for a free account, and login
 - Get the `tokenURI` for your NFT as described above and open it in a new browser tab.  It will look something like this:
@@ -106,4 +106,4 @@ Your Pinata dashboard should look something like this if everything went okay.
     - Desktop -Metamask and Torus
     - Mobile - Metamask Mobile, Opera Touch
 - NFTs are only visible on OpenSea on Rinkeby and Mainnet
-- NFT metadata is currently stored on IPFS so not guaranteed to be preserved if additional pinning functionality is not built
+
