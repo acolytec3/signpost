@@ -169,7 +169,7 @@ const FileUploader = () => {
         }
       };
       reader.readAsDataURL(new File([image], "autograph.png"));
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
       toast({
         position: "top",
@@ -274,7 +274,7 @@ const FileUploader = () => {
         console.log("ipfs hash", added);
         setHash(added);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         position: "top",
@@ -327,7 +327,7 @@ const FileUploader = () => {
           description: "Your wallet is connected to an unsupported network",
           duration: 5000,
         });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         position: "top",

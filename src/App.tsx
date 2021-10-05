@@ -42,7 +42,7 @@ function App() {
   };
 
   React.useEffect(() => {
-    startUp();
+    //  startUp();
   }, []);
 
   const wallets = [
@@ -55,7 +55,7 @@ function App() {
   const onboard = Onboard({
     networkId: state?.chain ? state.chain : 42,
     subscriptions: {
-      wallet: (wallet) => {
+      wallet: (wallet: any) => {
         try {
           //@ts-ignore
           if (window.ethereum) {
@@ -63,8 +63,10 @@ function App() {
             window.ethereum.enable();
           }
           web3 = new ethers.providers.Web3Provider(wallet.provider);
+          //@ts-ignore
+          window.web3 = web3;
           dispatch({ type: "SET_WEB3", payload: { web3: web3 } });
-        } catch (err) {
+        } catch (err: any) {
           console.log(err);
           toast({
             position: "top",
@@ -75,13 +77,13 @@ function App() {
           });
         }
       },
-      address: (address) => {
+      address: (address: any) => {
         dispatch({ type: "SET_ADDRESS", payload: { address: address } });
       },
-      balance: (balance) => {
+      balance: (balance: any) => {
         dispatch({ type: "SET_BALANCE", payload: { balance: balance } });
       },
-      network: (network) => {
+      network: (network: any) => {
         dispatch({ type: "SET_CHAIN", payload: { chain: network } });
       },
     },
@@ -94,7 +96,7 @@ function App() {
     dispatch({ type: "SET_ONBOARD", payload: { onboard: onboard } });
     try {
       const walletSelected = await onboard.walletSelect();
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
       toast({
         position: "top",
