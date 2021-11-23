@@ -20,17 +20,26 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import React, { ChangeEvent } from "react";
 import { CirclePicker } from "react-color";
 import { FiCopy, FiExternalLink } from "react-icons/fi";
 import { Image, Layer, Line, Stage } from "react-konva";
-import { NFTStorage, Blob } from 'nft.storage'
+import { NFTStorage, Blob } from "nft.storage";
 import GlobalContext from "../context/globalContext";
 import ProtonAbi from "../contracts/Proton.json";
 import SignPostAbi from "../contracts/rinkebySignpost.json";
 import { formatAddress } from "../helpers/helpers";
 import { GLOBALS } from "../helpers/globals";
+import { InjectedEthereumSigner, createData } from "arbundles";
+import {
+  createTx,
+  fundMatic,
+  getBundlrBalance,
+  getPrice,
+  uploadItem,
+} from "../helpers/bundlr";
+import { Blob as BrowserBlob } from "buffer";
 
 type NftAttribute = {
   name: string;
@@ -65,7 +74,7 @@ const STAGE_DIMENSION = 300;
 
 const apiKey = process.env.REACT_APP_NFTSTORAGEKEY;
 //@ts-ignore
-const client = new NFTStorage({ token: apiKey })
+const client = new NFTStorage({ token: apiKey });
 
 const FileUploader = () => {
   const { state } = React.useContext(GlobalContext);
@@ -92,6 +101,8 @@ const FileUploader = () => {
     signatures: [],
     description: "",
   });
+  const [maticPrice, setMaticPrice] = React.useState<BigNumber>();
+  const [maticBalance, setMaticBalance] = React.useState<BigNumber>();
   const { onCopy } = useClipboard(autographHash);
 
   React.useEffect(() => {
@@ -198,7 +209,7 @@ const FileUploader = () => {
     }
   };
 
-  function dataURItoBlob(dataURI: string) {
+  async function dataURItoBlob(dataURI: string) {
     // convert base64 to raw binary data held in a string
     var byteString = atob(dataURI.split(",")[1]);
 
@@ -212,6 +223,10 @@ const FileUploader = () => {
       _ia[i] = byteString.charCodeAt(i);
     }
 
+    const price = await getPrice(_ia.length);
+    setMaticPrice(price);
+    const bbalance = await getBundlrBalance(state.address!);
+    setMaticBalance(bbalance);
     var dataView = new DataView(arrayBuffer);
     var blob = new Blob([dataView], { type: mimeString });
     return blob;
@@ -225,7 +240,7 @@ const FileUploader = () => {
     setLines([]);
     onClose();
     try {
-      let blob = dataURItoBlob(img);
+      let blob = await dataURItoBlob(img);
       if (state.ipfs) {
         let added = await client.storeBlob(blob);
         let nftMetadata = metadata;
@@ -340,6 +355,12 @@ const FileUploader = () => {
     setPhoto(undefined);
   };
 
+  const uploadToArweave = async () => {
+    let imageBuffer = Buffer.from(autographedImage);
+
+    const res = await uploadItem(imageBuffer, state.web3!);
+    console.log(res);
+  };
   const handleColorChange = (color: any) => {
     setColor(color.hex);
   };
@@ -405,22 +426,23 @@ const FileUploader = () => {
   };
 
   const _renderEtherscanLink = () => {
-    let name = ''
+    let name = "";
 
     switch (state.chain) {
-      case 1: name = ''; break;
-      case 4: name = 'rinkeby.'; break;
-      case 42: name = 'kovan.'; break;
+      case 1:
+        name = "";
+        break;
+      case 4:
+        name = "rinkeby.";
+        break;
+      case 42:
+        name = "kovan.";
+        break;
     }
     return (
       <HStack
         onClick={() =>
-          window.open(
-            `https://${name}etherscan.io/tx/${
-              txn.hash
-            }`,
-            "_blank"
-          )
+          window.open(`https://${name}etherscan.io/tx/${txn.hash}`, "_blank")
         }
         cursor="pointer"
       >
@@ -522,7 +544,9 @@ const FileUploader = () => {
                 </Popover>
                 <Button onClick={() => setLines([])}>Clear Autograph</Button>
               </HStack>
-              <Button onClick={autographPhoto} disabled={!state.web3}>Autograph NFT</Button>
+              <Button onClick={autographPhoto} disabled={!state.web3}>
+                Autograph NFT
+              </Button>
               {metadata.signatures.length > 0 &&
                 metadata.signatures.map((signature) => {
                   return (
@@ -541,6 +565,7 @@ const FileUploader = () => {
                 })}
             </VStack>
           </Collapse>
+
           <Button
             w="250px"
             isDisabled={!autographedImage || !state.address}
@@ -548,6 +573,18 @@ const FileUploader = () => {
           >
             {`Mint on ${state.chain === 4 ? "Rinkeby" : "Charged Particles"}`}
           </Button>
+          {maticPrice && maticBalance && (
+            <>
+              <Text>Matic Price: {ethers.utils.formatEther(maticPrice)}</Text>
+              <Text>
+                Matic Balance: {ethers.utils.formatEther(maticBalance)}
+              </Text>
+              <Button onClick={() => fundMatic(maticPrice, state.web3!)}>
+                Fund Matic Account
+              </Button>
+              <Button onClick={uploadToArweave}>Upload to Arweave</Button>
+            </>
+          )}
           {txn && (
             <VStack>
               <HStack>
